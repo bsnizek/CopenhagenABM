@@ -1,0 +1,96 @@
+					System.out.println(this.getRoute().getRouteAdsRoadList());
+
+					ArrayList<Road> reversedRoadHistoryList = (ArrayList<Road>) this.getRoute().getRouteAdsRoadList().clone();
+					Collections.reverse(reversedRoadHistoryList);
+					
+					Road xx = reversedRoadHistoryList.get(0);
+					reversedRoadHistoryList.remove(0);
+					
+					// figure out which junction we are standing on
+
+					ArrayList<Junction> junctions = xx.getJunctions();
+					Junction junction1 = junctions.get(0);
+					Junction junction2 = junctions.get(1);
+					Junction junction = null;
+
+					if (junction1.getPoint().getCoordinate().distance(this.getPosition()) < junction2.getPoint().getCoordinate().distance(this.getPosition())) {
+						junction = junction1;
+					} else {
+						junction = junction2;
+					}
+
+					// we stand in 'junction', now get the roads going out from this junction
+
+					
+					boolean allEdgesVisited = true;
+
+					
+					while (allEdgesVisited) {
+						
+						// System.out.println("Let us move back for sequence : " + reversedRoadHistoryList);
+
+						List<Road> roads = junction.getRoads();
+
+						ArrayList<Road> possibleRoads = new ArrayList<Road>();
+						for (Road r: roads) {
+							try {
+								if (!this.visitedRoads.containsKey(r.getIdentifier())) {
+									possibleRoads.add(r);
+								}
+							} catch (NoIdentifierException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+
+						if (possibleRoads.size() == 0) {
+							
+							// no free edges, we move back
+							// roadCounter++; // increment the position on the road, backwards
+							
+							// get the next road
+							Road road = reversedRoadHistoryList.get(0);
+							reversedRoadHistoryList.remove(0);
+							
+							// and take the last element of the history off as well
+							this.getRoute().removeLastRoad();
+							
+							System.out.println("Moved back to :" + this.getRoute().getRouteAdsRoadList());
+							
+							ArrayList<Junction> bothJunctions = road.getJunctions();
+							Junction junctionOne = bothJunctions.get(0);
+							Junction junctionTwo = bothJunctions.get(1);
+							
+							if (junctionOne.getPoint().getCoordinate().distance(junction.getCoords()) < junctionTwo.getPoint().getCoordinate().distance(junction.getCoords())) {
+								junction = junctionTwo;
+							} else {
+								junction = junctionTwo;
+							}
+							
+
+						} else {
+							
+							allEdgesVisited = false; 
+							
+							// ok, we actually found free edges
+							// System.out.println("Found " + possibleRoads.size() + " not visited roads");
+							
+							// get one of the open roads
+							Random randomGenerator = new Random();
+							int index = randomGenerator.nextInt(possibleRoads.size());
+							newRoad = possibleRoads.get(index);
+							
+							ContextManager.moveAgent(this, this.fact.createPoint(junction.getCoords()));
+							
+//							try {
+//								// System.out.println("Moved back " + roadCounter + " edge and chose " + currentRoad.getIdentifier());
+//							} catch (NoIdentifierException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+//							}
+							
+							allEdgesVisited = false;
+							
+							
+						}
+					}

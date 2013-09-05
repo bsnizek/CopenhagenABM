@@ -1,0 +1,27 @@
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="copenhagenabm.orm">
+	<class name="Dot" table="dot">
+
+        <id name="id" column="id">
+			<generator class="native"/>
+		</id>
+
+
+        <property name="agentID" type="integer"/>
+
+
+		<property name="tick" type="integer"/>
+		
+
+        <property name="geom" type="org.hibernatespatial.postgis.PGGeometryUserType"  column="geom"/>
+	</class>
+	
+	<database-object> 
+    	<create>DELETE FROM dot</create> 
+        <drop></drop> 
+        <dialect-scope name="org.hibernatespatial.postgis.PostgisDialect" /> 
+   	</database-object>
+	
+</hibernate-mapping>

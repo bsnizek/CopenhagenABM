@@ -1,0 +1,12 @@
+EnvType
+GroenPct
+CykType
+GroenM
+ctracklane
+csti
+cfsti
+e_tvej
+e_lvej
+h_hoj
+e_but
+e_and

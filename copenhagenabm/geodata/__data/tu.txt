@@ -1,0 +1,2 @@
+timefrom;timeto;zonefrom;zoneto;number
+00:00;00:01;102130;102120;1
