@@ -5,6 +5,7 @@ import org.hibernate.SessionFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
+import copenhagenabm.agent.IAgent;
 import copenhagenabm.orm.Dot;
 import copenhagenabm.orm.HibernateUtil;
 
@@ -22,8 +23,8 @@ public class PostgresLogger {
 		System.out.println("PostgresSQLLogger instantiated ! ");
 	}
 	
-	 public void log(int tick, int agentID, Coordinate coordinate) {
-		 Dot d = new Dot(tick, agentID, coordinate);
+	 public void log(int tick, IAgent agent, Coordinate coordinate) {
+		 Dot d = new Dot(tick, agent, coordinate);
 		 //session.beginTransaction();
 		 session.save(d);
 		 

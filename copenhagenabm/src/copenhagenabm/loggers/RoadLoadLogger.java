@@ -26,7 +26,7 @@ public class RoadLoadLogger {
 		
 	}
 	
-	private String folder;
+//	private String folder;
 	
 	
 	/**
@@ -55,7 +55,7 @@ public class RoadLoadLogger {
 	}
 
 	public RoadLoadLogger(String folder) {
-		this.folder = folder;
+//		this.folder = folder;
 		this.dumpAt = ContextManager.writeRoadLoadEveryTick();
 	}
 	

@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import copenhagenabm.loggers.CalibrationLogger.SimpleTextFormatter;
+//import copenhagenabm.loggers.CalibrationLogger.SimpleTextFormatter;
 import copenhagenabm.main.ContextManager;
 
 public class SuccessLogger {

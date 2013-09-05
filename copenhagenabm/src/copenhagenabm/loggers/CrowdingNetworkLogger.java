@@ -71,7 +71,7 @@ public class CrowdingNetworkLogger {
 
 		AttributeType geomField = null;
 		AttributeType nField = null;
-		AttributeType modelRunField = null;
+//		AttributeType modelRunField = null;
 
 		FeatureType ftRoad = null;
 
@@ -81,7 +81,7 @@ public class CrowdingNetworkLogger {
 
 		geomField = DefaultAttributeTypeFactory.newAttributeType("LineString", Geometry.class, true, null, null, crs);
 		nField = AttributeTypeFactory.newAttributeType("n", Integer.class);
-		modelRunField = AttributeTypeFactory.newAttributeType("modelRun", Integer.class);
+//		modelRunField = AttributeTypeFactory.newAttributeType("modelRun", Integer.class);
 
 		ftRoad = FeatureTypeBuilder.newFeatureType(new AttributeType[] {geomField, nField}, "road");
 
