@@ -25,11 +25,14 @@ import java.util.Map;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
+import copenhagenabm.tools.ChopLineStringTool;
 
+import repast.simphony.space.gis.Geography;
 import repastcity3.environment.Junction;
 import repastcity3.environment.NetworkEdge;
 import repastcity3.exceptions.DuplicateRoadException;
@@ -91,6 +94,8 @@ public class Road implements FixedGeography  {
 	private int e_hoj;
 	private int e_but;
 	
+	private Junction sourceJunction;
+	
 	// The variable for the load counter
 	
 	private int load;
@@ -107,6 +112,16 @@ public class Road implements FixedGeography  {
 
 	private Junction targetJunction;
 
+	private Geometry geometry;
+	
+	Geography<Road> roadProjection = ContextManager.roadProjection;
+	
+	private ArrayList<LineString> polylineParts  = new ArrayList<LineString>();
+
+	private Road parentRoad;
+
+	private ChopLineStringTool chopLineStringTool;
+	
 	public Road() {
 		this.junctions = new ArrayList<Junction>();
 	}
@@ -118,8 +133,11 @@ public class Road implements FixedGeography  {
 	 * 
 	 */
 	@SuppressWarnings("unchecked")
-	public Road(Road cr, Coordinate firstCoordinateOnRoad, Junction junction, String ID) {
+	public Road(Road cr, Coordinate firstCoordinateOnRoad, Junction targetJunction, String ID) {
 		
+		this.chopLineStringTool = new ChopLineStringTool(cr.getGeometry());
+		
+		this.parentRoad  = cr;
 		this.junctions = new ArrayList<Junction>();
 
 		this.right = cr.getRight();
@@ -137,71 +155,42 @@ public class Road implements FixedGeography  {
 		this.goodbad = cr.getGoodbad();
 		this.identifier = ID;
 		
-		Junction sourceJunction = new Junction();
+		sourceJunction = new Junction();
 		sourceJunction.setCoords(firstCoordinateOnRoad);
 		
-		this.edge = new NetworkEdge(sourceJunction, junction, majorRoad, goodbad, accessibility);
+		this.edge = new NetworkEdge(sourceJunction, targetJunction, majorRoad, goodbad);
 		
-		this.setTargetJunction(junction);
+		this.setTargetJunction(targetJunction);
+		
+		this.geometry = null;
+		
+		buildGeometry();
+		
+		this.junctions.add(sourceJunction);
+		this.junctions.add(targetJunction);
+		
+		
+		
 		
 	}
-
-//	/**
-//	 * This should be called once this Road object has been created to perform some extra initialisation (e.g. setting
-//	 * the accessibility methods available to this Road).
-//	 * 
-//	 * @throws NoIdentifierException
-//	 */
-//	public void initialise() throws NoIdentifierException {
-//		if (this.identifier == null || this.identifier == "") {
-//			throw new NoIdentifierException("This road has no identifier. This can happen "
-//					+ "when roads are not initialised correctly (e.g. there is no attribute "
-//					+ "called 'identifier' present in the shapefile used to create this Road)");
-//		}
-//		// Parse the access string and work out which accessibility methods can be used to travel this Road
-//		if (this.access != null) { // Could be null because not using accessibility in GRID environment for example
-//			this.accessibility = new ArrayList<String>();
-//			for (String word : this.access.split(" ")) {
-//				if (word.equals(GlobalVars.TRANSPORT_PARAMS.MAJOR_ROAD)) {
-//					// Special case: 'majorRoad' isn't a type of access, means the road is quick for car drivers
-//					this.majorRoad = true;
-//				} else {
-//					// Otherwise just add the accessibility type to the list
-//					this.accessibility.add(word);
-//				}
-//			}
-//		}
-//	}
-
-//	/**
-//	 * Sets the access methods which can be used to get down this road (e.g. "walk", "car" etc).
-//	 * <p>
-//	 * Different roads can be accessed differently depending on the transportation available to the agents. The 'access'
-//	 * variable can be used by ShapefileLoader to set the different accessibility methods, but it must be parsed and the
-//	 * accessibility list populated in initialise() (once the Road has been created). E.g. the String "walk car"
-//	 * indicates agents can either walk or drive down the Road. Note that, ultimately, Roads might also form parts of
-//	 * transport networks (e.g. busses) but this is done by changing the edges in the roadNetwork directly (in
-//	 * EnvironmentFactory.createTransportNetworks) and does not affect Road objects.
-//	 * 
-//	 * @param access
-//	 *            A string indicating how this road can be traversed, separated by spaces.
-//	 */
-//	public void setAccess(String access) {
-//		this.access = access;
-//	}
-//
-//	public boolean isMajorRoad() {
-//		return this.majorRoad;
-//	}
-
+	
+	private void buildGeometry() {
+		Coordinate splitCoordinate = sourceJunction.getCoords();
+		this.geometry = chopLineStringTool.chop(splitCoordinate, this.targetJunction.getCoords());
+	}
+	
 	/**
-	 * Get the accessibility methods (not including public transport) which agents can use to travel along this road.
-	 * 
+	 * Returns the geometry of the road. It tries to get it out of the projection but if nothing's there it looks into the field 'geometry'. 
+	 * The latter is used when splitting roads at agent insertion. 
 	 * @return
-	 * @see setAccess
 	 */
-	public List<String> getAccessibility() {
-		return this.accessibility;
+	public Geometry getGeometry() {
+		Geometry g = this.roadProjection.getGeometry(this);
+		if (g == null) {
+			return this.geometry;
+		} else {
+			return g;
+		}
 	}
 
 	@Override
@@ -348,10 +337,6 @@ public class Road implements FixedGeography  {
 
 	public void setGroenpct(double groenpct) {
 		this.groenpct = groenpct;
-	}
-	
-	public Geometry getGeometry() {
-		return ContextManager.roadProjection.getGeometry(this);
 	}
 
 	public double getGoodbad() {

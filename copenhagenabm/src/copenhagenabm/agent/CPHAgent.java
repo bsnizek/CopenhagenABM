@@ -39,6 +39,7 @@ import copenhagenabm.environment.Road;
 import copenhagenabm.environment.Zone;
 import copenhagenabm.loggers.AgentHistoryKMZWriter;
 import copenhagenabm.loggers.AgentDotLogger;
+import copenhagenabm.loggers.RoadLoadLogger;
 import copenhagenabm.main.AGENT_SPEED_MODES;
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
@@ -147,7 +148,7 @@ public class CPHAgent implements IAgent {
 	private MatchedGPSRoute matchedGPSRoute;
 
 	private boolean toBeKilled = false;
-	
+
 	Person destinationPerson = null;
 
 	public Person getDestinationPerson() {
@@ -234,7 +235,7 @@ public class CPHAgent implements IAgent {
 
 		this.originBuilding = b;
 		this.id = uniqueID++;
-		
+
 		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
 
 		try {
@@ -331,16 +332,18 @@ public class CPHAgent implements IAgent {
 			}
 
 			Road cr = getCurrentRoad();
-			
-			
-			// let us log the entry on the first edge
-			try {
-				ContextManager.getRoadLoadLogger().addEntry(cr.getIdentifier());
-			} catch (NoIdentifierException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+
+			// let us log the entry on the first edge if the roadLoadLogger is switched on
+			RoadLoadLogger roadLoadLogger = ContextManager.getRoadLoadLogger();
+
+			if (roadLoadLogger != null) {
+				try {
+					roadLoadLogger.addEntry(cr.getIdentifier());
+				} catch (NoIdentifierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-			
 
 			// build two dummy roads, one from current position to junction 1 one to 2 
 
@@ -356,16 +359,16 @@ public class CPHAgent implements IAgent {
 
 			EdgeSelector es = new EdgeSelector(roads, null, this);
 
-			es.getDecisionMatrix().printMatrix(); // TODO: add a switch from the config file here
+			//			es.getDecisionMatrix().printMatrix(); // TODO: add a switch from the config file here
 
 			Road newRoad = es.getRoad();
-			
-//			try {
-//				ContextManager.getRoadLoadLogger().addEntry(newRoad.getIdentifier());
-//			} catch (NoIdentifierException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+
+			//			try {
+			//				ContextManager.getRoadLoadLogger().addEntry(newRoad.getIdentifier());
+			//			} catch (NoIdentifierException e) {
+			//				// TODO Auto-generated catch block
+			//				e.printStackTrace();
+			//			}
 
 			Point newTargetPoint = fact.createPoint(newRoad.getTargetJunction().getCoords());
 			Point crSourcePoint = fact.createPoint(cr.getEdge().getSource().getCoords());
@@ -401,130 +404,16 @@ public class CPHAgent implements IAgent {
 			double speed = this.getSpeed(); //in m/s
 
 			double distance = speed * stepLength;
-			
-			System.out.println("DISTANCE " + distance);
 
-//			System.out.println(this.getID() + " " + this.getPosition());
-			
+//			System.out.println("DISTANCE " + distance);
+
+			//			System.out.println(this.getID() + " " + this.getPosition());
+
 			OvershootData overshootData = plm.move(distance);
-			
-			System.out.println(overshootData);
-			
-		}
-			
-//			System.out.println(this.getPosition());
 
-//			if (overshootData != null) {
-//
-//				// let us check whether the last n edges are the same.
-//
-//				Road newRoad = null;
-//
-//
-//				// sometime the road returns null, lets do a little hack here, is easier than debugging the road selector :)				
-//
-//				List<Road> roads = this.targetJunction.getRoads();
-//				EdgeSelector es = new EdgeSelector(roads, currentRoad, this);
-//
-//				int x = 0;
-//
-//				while (newRoad == null && x<3) {
-//
-//					newRoad = es.getRoad();
-//					x++;
-//				}
-//
-//				if (newRoad == null) {
-//					newRoad = roads.get(0);
-//				}
-//				
-//				try {
-//					ContextManager.getRoadLoadLogger().addEntry(newRoad.getIdentifier());
-//				} catch (NoIdentifierException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				
-//
-//				// newRoad is null after we have killed the agent
-//				if (!isKilled || isTerminated()) {
-//
-//					// TODO: kick this out when logging to original road network is done
-//
-////					if (ContextManager.isLoadSumNetworkDumperOn()) {
-////
-////						try {
-////							ContextManager.getLoadNetwork().addEntryToRoad(newRoad);
-////						} catch (NoIdentifierException e2) {
-////							// TODO Auto-generated catch block
-////							e2.printStackTrace();
-////						}
-////					}
-//
-//					if (newRoad!=null) {
-//
-//						try {
-//							this.visitedRoads.put(newRoad.getIdentifier(), true);
-//						} catch (NoIdentifierException e1) {
-//							// TODO Auto-generated catch block
-//							e1.printStackTrace();
-//							// System.out.println(newRoad);
-//						}
-//					}
-//					// add one to the crowding index
-//					try {
-//						// unhack this, roadindex is keyed on an int and here we have a string. 
-//						String roadID = newRoad.getIdentifier();
-//						int roadIDint = new Integer(roadID);
-//						Road r = ContextManager.getRoadindex().get(roadIDint);
-//						int cl = r.getLoad();
-//						r.setLoad(cl+1);
-//
-//					} catch (NoIdentifierException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//
-//					}
-//
-//					// ContextManager.logDecision(this.targetJunction.getRoads(), newRoad, this.getID());
-//
-//					NetworkEdge<Junction> edge = newRoad.getEdge();
-//
-//					int newRoadJunctionID = edge.getSource().getId();
-//					int targetJunctionID = this.targetJunction.getId();
-//
-//					if ( newRoadJunctionID == targetJunctionID ) {
-//						this.targetJunction = newRoad.getEdge().getTarget();
-//					} else {
-//						this.targetJunction = newRoad.getEdge().getSource();	
-//					}
-//
-//					ContextManager.moveAgent(this, overshootData.getPoint());
-//
-//					currentRoad = newRoad; // the road we end up on
-//
-//					currentRoad.setTargetJunction(this.targetJunction);
-//
-//					try {
-//						this.visitedRoads.put(currentRoad.getIdentifier(), true);
-//					} catch (NoIdentifierException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//
-//					plm = new PolyLineMover(this, currentRoad, this.targetJunction);
-//					OvershootData overShootData = plm.move(overshootData.getOvershoot());
-//
-//					this.addToRoute(currentRoad, currentRoad.getGeometry());
-//					
-//					if (this.isAtDestination()) {
-//						this.setTerminated(true);
-//					}
-//
-//				}
-//			}
-//
-//		}
+//			System.out.println(overshootData);
+
+		}
 
 
 		if (!isKilled) {
@@ -556,10 +445,10 @@ public class CPHAgent implements IAgent {
 
 			history.add(m);
 		}
-		
+
 		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
-		ContextManager.getPostgresLogger().log(currentTick, this.getID(), this.getPosition());
-		
+		ContextManager.getPostgresLogger().log(currentTick, this, this.getPosition());
+
 		if (this.isAtDestination()) {
 			ContextManager.removeAgent(this);
 		}
@@ -605,8 +494,8 @@ public class CPHAgent implements IAgent {
 			String newPathSizeString=xx[0] + "," + xx[1];
 
 			// ContextManager.getCalibrationLogger().logLine(this.getID() + ";" + this.getGpsRouteID() + ";" + newPathSizeString);
-			
-			
+
+
 			// do the logging if there are more than 5 edges, otherwise increase the canceled agent value
 			if (this.matchedGPSRoute.getNumberOfEdges()>5) {
 				ContextManager.getCalibrationLogger().logLine(newPathSizeString +  ";" + ContextManager.getAngleToDestination() + ";" + this.matchedGPSRoute.getOBJECTID() + ";" + this.matchedGPSRoute.getNumberOfEdges());

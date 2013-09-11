@@ -55,7 +55,7 @@ import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.agent.AgentFactory;
 
-import copenhagenabm.agent.CPHAgent;
+//import copenhagenabm.agent.CPHAgent;
 import copenhagenabm.agent.Decision;
 import copenhagenabm.agent.Dot;
 import copenhagenabm.agent.IAgent;
@@ -98,7 +98,7 @@ import repastcity3.environment.contexts.BuildingContext;
 import repastcity3.environment.contexts.JunctionContext;
 import repastcity3.environment.contexts.RoadContext;
 import repastcity3.environment.contexts.RouteContext;
-import repastcity3.exceptions.AgentCreationException;
+//import repastcity3.exceptions.AgentCreationException;
 import repastcity3.exceptions.EnvironmentError;
 import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.exceptions.ParameterNotFoundException;
@@ -109,7 +109,7 @@ import copenhagenabm.loggers.DecisionTextLogger;
 import copenhagenabm.loggers.KillLogger;
 import copenhagenabm.loggers.PostgresLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
-import copenhagenabm.loggers.SimpleLoadLogger;
+//import copenhagenabm.loggers.SimpleLoadLogger;
 import copenhagenabm.loggers.SuccessLogger;
 import copenhagenabm.main.CopenhagenABMLogging;
 import copenhagenabm.routes.MatchedGPSRoute;
@@ -1440,8 +1440,6 @@ public class ContextManager implements ContextBuilder<Object> {
 			}
 		}
 
-		System.out.println(cntr + " attempts.");
-
 		agentsToBeRemoved = new ArrayList<IAgent>();
 
 //		System.out.println("AFTER " + getAgentContext().getObjects(IAgent.class).size());
@@ -1466,9 +1464,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		int terminationTick = new Integer((int) (new Integer(ContextManager.getProperty("EndTime")) ));
 
 		if (currentTick>terminationTick && !ContextManager.inCalibrationMode()) {
-
 			terminateModel(currentTick);
-
 		}
 
 		if (ContextManager.inCalibrationMode()) {
@@ -2298,6 +2294,10 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static void resetCrowdingNetwork() {
 		ContextManager.crowdingNetwork = new RoadNetwork();
 
+	}
+	
+	public static int dumpAtEveryTick() {
+		return new Integer(getProperty("dumpAtEveryTick"));
 	}
 
 

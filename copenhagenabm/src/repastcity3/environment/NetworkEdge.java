@@ -54,12 +54,8 @@ public class NetworkEdge<T> extends RepastEdge<T> {
 	 * @param initialAccess e.g. a list containing strings ("walk", "bus" or "car" etc). Can be null if different
 	 * road accessibility / transport networks are not being used (e.g. in Grid environment). 
 	 */
-	public NetworkEdge(T source, T target, boolean directed, double weight, List<String> initialAccess) {
+	public NetworkEdge(T source, T target, boolean directed, double weight) {
 		super(source, target, directed, weight);
-		if (initialAccess!=null) {
-			this.access = new ArrayList<String>();
-			this.access.addAll(initialAccess);
-		}
 	}
 
 	/**

@@ -28,10 +28,10 @@ public class Test {
 	}
 	
 	public void addDot() {
-		Dot d = new Dot(0, 0, new Coordinate(0.0,0.0));
-		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
-		session.beginTransaction();
-		session.save(d);
-		session.getTransaction().commit();
+//		Dot d = new Dot(0, 0, new Coordinate(0.0,0.0));
+//		Session session = HibernateUtil.getSessionFactory().getCurrentSession();
+//		session.beginTransaction();
+//		session.save(d);
+//		session.getTransaction().commit();
 	}
 }

@@ -61,11 +61,11 @@ public class PolyLineMover {
 
 
 		// build an array of sub-linestrings
+		// TODO : use ChopLineStringTool !!
 
-		Geography<Road> roadP = ContextManager.roadProjection;
-		Context<Road> roadC = ContextManager.getRoadContext();
-		Geometry roadGeom = roadP.getGeometry(road);
+		Geometry roadGeom = road.getGeometry();
 		Coordinate[] roadCoords = roadGeom.getCoordinates();
+			
 		List<Coordinate> rc =  Arrays.asList(roadCoords);
 
 		double SNAP_DISTANCE = GlobalVars.GEOGRAPHY_PARAMS.SNAP_DISTANCE;
@@ -296,117 +296,10 @@ public class PolyLineMover {
 			}
 		}
 		
-		System.out.println("Agent placed at " + agent.getPosition());
+//		System.out.println("Agent placed at " + agent.getPosition());
 		
 	}
 	
-	
-	public OvershootData DEPRECATED(double distance) {
-
-		// System.out.println("current segment " + currentLineSegmentID + " d= " + distance);
-
-		// double currentLineSegmentLength = currentLineSegment.getLength();
-		double currentLineSegmentLength = getOrthodromicDistance(currentLineSegment.getStartPoint().getCoordinate(), currentLineSegment.getEndPoint().getCoordinate());
-
-		// double posOnSegment = currentLineSegment.getStartPoint().getCoordinate().distance(agent.getPosition());
-		double posOnSegment = getOrthodromicDistance(currentLineSegment.getStartPoint().getCoordinate(), agent.getPosition());		
-
-		double posOnSegmentPlusDistance = posOnSegment + distance;
-
-//		double remainingDistanceOnPolyline = getOrthodromicDistanceToEndOfPolyline();
-		double remainingDistanceOnPolyline = getDistanceToEndOfPolyline();
-
-
-		// System.out.println(" " + posOnSegment + " " + posOnSegmentPlusDistance+" "+ remainingDistanceOnPolyline+" " + currentLineSegmentLength + " " + currentLineSegmentID + " " + distance);
-
-		// let us check whether the next touchdown will be inside the current segment
-		if ( posOnSegmentPlusDistance <= currentLineSegmentLength ) {
-
-			// 1. the agent is after the move on the same segment (agent -> endpoint > distance)
-
-
-			distance(currentLineSegment.getStartPoint().getCoordinate(), 
-					currentLineSegment.getEndPoint().getCoordinate(), distAndAngle);
-
-			double angle = distAndAngle[1];
-			ContextManager.moveAgentByVector(agent, distance, angle);
-
-			return null;
-
-
-		} else if ( remainingDistanceOnPolyline > distance) {
-
-			// 2. the agents stays on the polyline but jumps to a different segment (distance < agent->end
-
-
-			// here we check whether the endpoint of the move ends up on the current polyline
-
-			// the distance from the start line segment to the current position
-			double md = getOrthodromicDistance(currentLineSegment.getStartPoint().getCoordinate(), agent.getPosition()); 
-
-			// the length of the current line segment
-			double l  = getOrthodromicLineLength(currentLineSegment);
-
-
-			double x = Math.abs(l - md); // TODO:bad hack, remove the abs
-			int i = currentLineSegmentID;
-
-			while (x < distance) {
-
-				i++;
-				
-				if (i >= polylineParts.size()) {
-					try {
-						System.out.println("BREAK with agent" + this.agent.getID() + " at roadID = " + this.road.getIdentifier() +  
-								" Originbuilding " + this.agent.getOriginBuilding() + " destinationbuilding " + this.agent.getDestinationPerson().getBuilding().getOBJECTID());
-					} catch (NoIdentifierException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					i = i -1;
-					break;
-				} else {
-					LineString ppart = polylineParts.get(i);
-					x = x + getOrthodromicLineLength(ppart);
-//					System.out.println("x: " + x);
-				}
-
-			}
-
-			double backwardsOvershoot = x - distance;
-
-			// double overshoot = polylineParts.get(i).getLength() - backwardsOvershoot;
-			double overshoot = getOrthodromicLineLength(polylineParts.get(i)) - backwardsOvershoot;
-
-			currentLineSegment = polylineParts.get(i);
-			currentLineSegmentID = i;
-
-			distance(currentLineSegment.getStartPoint().getCoordinate(),
-					currentLineSegment.getEndPoint().getCoordinate(), distAndAngle);
-			double angle = distAndAngle[1];
-			ContextManager.moveAgent(agent, currentLineSegment.getStartPoint());
-
-			// TODO: hack here : 
-			overshoot = Math.abs(overshoot);
-
-			ContextManager.moveAgentByVector(agent, overshoot, angle);
-
-			return null;
-		}
-
-		else {
-
-			// 3. the distance > the rest of the polyline distance and jumps onto the next polyline
-			// MoveException m = new MoveException("overshoot", distance - remainingDistanceOnPolyline, currentLineSegment.getEndPoint());
-			return new OvershootData(distance - remainingDistanceOnPolyline, currentLineSegment.getEndPoint() );
-
-		} 
-
-
-
-	}
-
-
 
 	/**
 	 * Calculate the distance (in meters) between two Coordinates, using the coordinate reference system that the

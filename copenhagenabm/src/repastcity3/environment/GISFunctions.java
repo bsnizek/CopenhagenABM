@@ -108,8 +108,7 @@ public class GISFunctions {
 			junc2.addRoad(road);
 
 			// Create an edge between the two junctions, assigning a weight equal to it's length
-			NetworkEdge<Junction> edge = new NetworkEdge<Junction>(junc1, junc2, false, roadGeom.getLength(), road
-					.getAccessibility());
+			NetworkEdge<Junction> edge = new NetworkEdge<Junction>(junc1, junc2, false, roadGeom.getLength());
 			// Set whether or not the edge represents a major road (gives extra benefit to car drivers).
 //			if (road.isMajorRoad())
 //				edge.setMajorRoad(true);

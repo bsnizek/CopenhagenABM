@@ -35,39 +35,6 @@ public class NearestRoadCoord {
 		
 	}
 	
-	
-//	private static Logger LOGGER = Logger.getLogger(NearestRoadCoord.class.getName());
-	
-	/*
-	 * Cache the nearest road Coordinate to every building for efficiency (agents usually/always need to get from the
-	 * centroids of houses to/from the nearest road).
-	 */
-//	private static volatile NearestRoadCoordCache nearestRoadCoordCache;
-	
-//	private static Object buildingsOnRoadCacheLock = new Object();
-
-//	private synchronized Coordinate getNearestRoadCoord(Coordinate inCoord) throws Exception {
-//		// double time = System.nanoTime();
-//
-//		synchronized (buildingsOnRoadCacheLock) {
-//			if (nearestRoadCoordCache == null) {
-//				LOGGER.log(Level.FINE, "Route.getNearestRoadCoord called for first time, "
-//						+ "creating cache of all roads and the buildings which are on them ...");
-//				// Create a new cache object, this will be read from disk if
-//				// possible (which is why the getInstance() method is used
-//				// instead of the constructor.
-//				String gisDir = ContextManager.getProperty(GlobalVars.GISDataDirectory);
-//				File buildingsFile = new File(gisDir + ContextManager.getProperty(GlobalVars.BuildingShapefile));
-//				File roadsFile = new File(gisDir + ContextManager.getProperty(GlobalVars.RoadShapefile));
-//				File serialisedLoc = new File(gisDir + ContextManager.getProperty(GlobalVars.BuildingsRoadsCoordsCache));
-//
-//				nearestRoadCoordCache = NearestRoadCoordCache.getInstance(ContextManager.buildingProjection,
-//						buildingsFile, ContextManager.roadProjection, roadsFile, serialisedLoc, new GeometryFactory());
-//			} // if not cached
-//		} // synchronized
-//		return nearestRoadCoordCache.get(inCoord);
-//	}
-	
 	/**
 	 * Caches the nearest road Coordinate to every building for efficiency (agents usually/always need to get from the
 	 * centroids of houses to/from the nearest road).

@@ -7,8 +7,12 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.Type;
 
+import repastcity3.exceptions.NoIdentifierException;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
+
+import copenhagenabm.agent.IAgent;
 
 @Entity
 @Table(name="dot")
@@ -16,19 +20,43 @@ public class Dot {
 	
 	private com.vividsolutions.jts.geom.GeometryFactory fact = new com.vividsolutions.jts.geom.GeometryFactory();
 	
+	private Point geom;
 	private int tick;
 	private int agentID;
 	private int id;
-	private String edgeID;
+	private String roadID;
+	
+	public Dot(int tick, IAgent agent, Coordinate coordinate) {
+		this.tick = tick;
+		this.agentID = agent.getID();
+		this.setGeom(fact.createPoint(coordinate));
+		try {
+			this.roadID = agent.getCurrentRoad().getIdentifier();
+		} catch (NoIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Column(name="geom")
+	@Type(type = "org.hibernatespatial.postgis.PGGeometryUserType")
+	public Point getGeom() {
+		return geom;
+	}
+	
+	public void setGeom(Point geometry) {
+		this.geom = geometry;
+		this.geom.setSRID(4326);
+	}
 	
 
-	@Column(name="edgeid")
-	public String getEdgeID() {
-		return edgeID;
+	@Column(name="roadid")
+	public String getRoadID() {
+		return roadID;
 	}
 
-	public void setEdgeID(String edgeID) {
-		this.edgeID = edgeID;
+	public void setRoadID(String roadID) {
+		this.roadID = roadID;
 	}
 
 	public void setId(int id) {
@@ -38,15 +66,6 @@ public class Dot {
 	@Column(name="agentid")
 	public int getAgentID() {
 		return agentID;
-	}
-
-
-	private Point geom;
-	
-	public Dot(int tick, int agentID, Coordinate coordinate) {
-		this.tick = tick;
-		this.agentID = agentID;
-		this.setGeom(fact.createPoint(coordinate));
 	}
 
 	@Column(name="id")
@@ -59,24 +78,10 @@ public class Dot {
 		this.agentID = id;
 	}
 
-
-	
-	@Column(name="geom")
-	@Type(type = "org.hibernatespatial.postgis.PGGeometryUserType")
-	public Point getGeom() {
-		return geom;
-	}
-	
-	public void setGeom(Point geometry) {
-		this.geom = geometry;
-		this.geom.setSRID(4326);
-	}
-
 	@Column(name="tick")
 	public int getTick() {
 		return tick;
 	}
-
 
 	public void setTick(int tick) {
 		this.tick = tick;

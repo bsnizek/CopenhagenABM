@@ -212,6 +212,8 @@ public class EdgeSelector {
 //				e.printStackTrace();
 //			}
 //		}
+		
+		this.agent.setCurrentRoad(r);
 
 		return r;
 

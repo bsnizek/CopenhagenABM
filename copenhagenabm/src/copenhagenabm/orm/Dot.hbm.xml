@@ -8,13 +8,12 @@
 			<generator class="native"/>
 		</id>
 
-
         <property name="agentID" type="integer"/>
 
-
 		<property name="tick" type="integer"/>
-		
-
+        
+        <property name="roadID" type="string"/>
+        
         <property name="geom" type="org.hibernatespatial.postgis.PGGeometryUserType"  column="geom"/>
 	</class>
 	
