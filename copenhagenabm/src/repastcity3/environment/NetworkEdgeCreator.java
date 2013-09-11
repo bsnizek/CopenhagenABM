@@ -34,7 +34,7 @@ public class NetworkEdgeCreator <T> implements EdgeCreator<NetworkEdge<T>, T> {
 	   * @return the created edge.
 	   */
 	  public NetworkEdge<T> createEdge(T source, T target, boolean isDirected, double weight) {
-	    return new NetworkEdge<T>(source, target, isDirected, weight, Arrays.asList(new String[] {"testingEdgeCreator"}));
+	    return new NetworkEdge<T>(source, target, isDirected, weight);
 	  }
 
 	  /**
