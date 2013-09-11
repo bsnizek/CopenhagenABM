@@ -339,6 +339,14 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static ArrayList<IAgent> agentsToBeRemoved = new ArrayList<IAgent>();
 	public static ArrayList<IAgent> agentsToBeSpawned = new ArrayList<IAgent>();
 
+	public static ArrayList<IAgent> getAgentsToBeSpawned() {
+		return agentsToBeSpawned;
+	}
+
+	public static void setAgentsToBeSpawned(ArrayList<IAgent> agentsToBeSpawned) {
+		ContextManager.agentsToBeSpawned = agentsToBeSpawned;
+	}
+
 	public static HashMap<Integer, Road> getRoadindex() {
 		return roadIndex;
 	}
@@ -1446,19 +1454,31 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public void spawnAgents() {
-		for (IAgent a : ContextManager.agentsToBeSpawned) {
+		ArrayList<IAgent> aTBS = ContextManager.getAgentsToBeSpawned();
+		if (aTBS.contains(null)) {
+			System.out.println("NULL contained");
+		}
+		for (IAgent a : (ArrayList<IAgent>) aTBS.clone()) {
+			if (a==null) {
+				System.out.println(a);
+			}
 			if (!ContextManager.agentsToBeRemoved.contains(a)) {
 				addAgentToContext(a);
 				a.snapAgentToRoad();
+//				removeAgentFromAgentsToBeSpawned(a);
 			}
 		}
-		ContextManager.agentsToBeSpawned = new ArrayList<IAgent>();
 	}
 	
+	public void removeAgentFromAgentsToBeSpawned(IAgent agent) {
+		ContextManager.getAgentsToBeSpawned().remove(agent);
+	}
 
-	public void stepAgents() throws Exception {
+	public void stepAgents() {
 
 		spawnAgents();
+		ContextManager.agentsToBeSpawned = new ArrayList<IAgent>();
+		removeAgentsToBeRemoved();
 		
 		int currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
 		int terminationTick = new Integer((int) (new Integer(ContextManager.getProperty("EndTime")) ));
@@ -1468,12 +1488,18 @@ public class ContextManager implements ContextBuilder<Object> {
 		}
 
 		if (ContextManager.inCalibrationMode()) {
-			stepCalibrationAgents();
+			try {
+				stepCalibrationAgents();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		} else {
-			stepStandardAgents();
+			try {
+				stepStandardAgents();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		
-		removeAgentsToBeRemoved();
 
 	}
 

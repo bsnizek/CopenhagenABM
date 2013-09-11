@@ -21,10 +21,7 @@ import com.vividsolutions.jts.geom.Point;
 import copenhagenabm.environment.Road;
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
-import repast.simphony.context.Context;
-import repast.simphony.space.gis.Geography;
 import repastcity3.environment.Junction;
-import repastcity3.exceptions.NoIdentifierException;
 
 import copenhagenabm.tools.SnapTool;
 import copenhagenabm.tools.geodetic.GeodeticCalculator;
@@ -65,7 +62,7 @@ public class PolyLineMover {
 
 		Geometry roadGeom = road.getGeometry();
 		Coordinate[] roadCoords = roadGeom.getCoordinates();
-			
+
 		List<Coordinate> rc =  Arrays.asList(roadCoords);
 
 		double SNAP_DISTANCE = GlobalVars.GEOGRAPHY_PARAMS.SNAP_DISTANCE;
@@ -169,29 +166,39 @@ public class PolyLineMover {
 	 * @return
 	 */
 	public double getDistanceToEndOfPolyline() {
-		
+
 		double sum = 0.0d;
 		for (int i=currentLineSegmentID+1; i< polylineParts.size(); i++) {
 			// double od = polylineParts.get(i).getStartPoint().getCoordinate().distance(polylineParts.get(i).getEndPoint().getCoordinate());
-			this.distance( polylineParts.get(i).getStartPoint().getCoordinate(),polylineParts.get(i).getEndPoint().getCoordinate(),distAndAngle);
-							
+			PolyLineMover.distance( polylineParts.get(i).getStartPoint().getCoordinate(),polylineParts.get(i).getEndPoint().getCoordinate(),distAndAngle);
+
 			sum = sum + distAndAngle[0];
 		}
 
-		// and then add the rest of the current poly to the sum
+		// and then add the rest of the current poly to the sum 
 		Coordinate aPos = agent.getPosition();
 		Coordinate lSEp = currentLineSegment.getEndPoint().getCoordinate();
-		
-		PolyLineMover.distance(aPos, lSEp, distAndAngle);
-		
-		sum = sum + distAndAngle[0];
-		
-//		sum = sum + agent.getPosition().distance(currentLineSegment.getEndPoint().getCoordinate());
 
-		return sum;
+		if (distAndAngle[0] < new Integer(ContextManager.getProperty(GlobalVars.distanceSnap))) {
+//			System.out.println(this.agent.getID());
+			return 0.0d;
+		} else  {
+
+			PolyLineMover.distance(aPos, lSEp, distAndAngle);
+
+
+
+			sum = sum + distAndAngle[0];
+
+			//		sum = sum + agent.getPosition().distance(currentLineSegment.getEndPoint().getCoordinate());
+
+			return sum;
+
+		}
+
 	}
-	
-	
+
+
 	public double getOrthodromicDistanceToEndOfPolyline() {
 		// first accumulate the lengths on the poly from the next segment on 
 		double sum = 0.0d;
@@ -206,7 +213,7 @@ public class PolyLineMover {
 
 		return sum;
 	}
-	
+
 	public Junction getOppositeJunction(Road road, Junction sourceJunction) {
 		ArrayList<Junction> jS = road.getJunctions();
 		if (jS.get(0) == sourceJunction) {
@@ -214,54 +221,54 @@ public class PolyLineMover {
 		} else {
 			return jS.get(0);
 		}
-		
+
 	}
 
 	public OvershootData move(double distance)  {
-		
+
 		// 1. set remaining step distance to step length -> RemainingDistanceOfStep
 		// 2. get the remaining distance towards the target node (remainingDistanceOnEdge)
 		// 3. subtract RemainingDistanceOfStep-remainingDistanceOnPolyline -> overshoot
 		// 4. make a road selection
 		// 5. if (the length of the next road < overshoot) go back to 4
-		
+
 		double remainingDistanceOfStep = distance;
-		
+
 		double remainingDistanceOnPolyline = getDistanceToEndOfPolyline();
-		
-		double overshoot = remainingDistanceOfStep- remainingDistanceOnPolyline;
-		
-		if (overshoot > 0) {
-			
+
+		double overshoot = remainingDistanceOfStep - remainingDistanceOnPolyline;
+
+		if (overshoot >= 0.0d) {
+
 			List<Road> roads = this.targetJunction.getRoads();
 			EdgeSelector es = new EdgeSelector(roads, road, this.getAgent());
 			Road newRoad = es.getRoad();
-			
+
 			// place the agent on the beginning of the road
 			placeAgentOnRoad(road, this.targetJunction, 0);
-			
+
 			if (agent.isAtDestination()) {
 				return null;
 			}
-		
-			
+
+
 			this.targetJunction = getOppositeJunction(newRoad, this.targetJunction);
-			
+
 			PolyLineMover plm = new PolyLineMover(agent, newRoad, this.targetJunction);
 			plm.move(overshoot);
-			
+
 		} else { 		
-			
+
 			placeAgentOnRoad(road, getOppositeJunction(this.road, this.targetJunction), remainingDistanceOfStep);
 			if (agent.isAtDestination()) {
 				return null;
 			}
-		
+
 		}
 		return null;
-		
+
 	}
-	
+
 	/**
 	 * 
 	 * Places an agent on the given <road> towards the <targetJunction> in a distance of <dist>.
@@ -270,9 +277,9 @@ public class PolyLineMover {
 	 * @param targetJunction
 	 */
 	public void placeAgentOnRoad(Road road, Junction targetJunction, double distance) {
-		
+
 		// lets loop through the polyline parts
-		
+
 		double d2 = distance;
 
 		for (int i=0; i<polylineParts.size();i++) {
@@ -281,25 +288,25 @@ public class PolyLineMover {
 				// get the setoff base coordinate
 				Coordinate setoffCoordinate = polylineParts.get(i).getCoordinateN(0);
 				Coordinate targetCoordinate = polylineParts.get(i).getCoordinateN(1);
-				
+
 				distance(setoffCoordinate,
-						 targetCoordinate, distAndAngle);
-				
+						targetCoordinate, distAndAngle);
+
 				double angle = distAndAngle[1];
-				
+
 				Point setoffPoint = fact.createPoint(setoffCoordinate);
-				
+
 				ContextManager.moveAgent(agent, setoffPoint);
 
 				ContextManager.moveAgentByVector(agent, d2 * (-1.0), angle);
-				
+
 			}
 		}
-		
-//		System.out.println("Agent placed at " + agent.getPosition());
-		
+
+		//		System.out.println("Agent placed at " + agent.getPosition());
+
 	}
-	
+
 
 	/**
 	 * Calculate the distance (in meters) between two Coordinates, using the coordinate reference system that the
@@ -345,8 +352,8 @@ public class PolyLineMover {
 
 		ContextManager.orthodromicCounter++;
 
-//		CoordinateReferenceSystem crs = ContextManager.getCrs();
-//		double result = 0;
+		//		CoordinateReferenceSystem crs = ContextManager.getCrs();
+		//		double result = 0;
 
 		//		GeodeticCalculator calculator = new GeodeticCalculator(crs);
 		//		calculator.setStartingGeographicPoint(c1.x, c1.y);

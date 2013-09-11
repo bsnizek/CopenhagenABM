@@ -47,6 +47,10 @@ public class AgentFactory {
 		
 		// System.out.print("+ " + a);
 		
+		if (a==null) {
+			System.out.println("null");
+		}
+		
 		ContextManager.agentsToBeSpawned.add(a);
 		
 		//ContextManager.addAgentToContext(a); // Add the agent to the context
