@@ -100,4 +100,6 @@ public interface IAgent {
 	public void setDidNotFindDestination(boolean b);
 
 	public void snapAgentToRoad();
+
+	void logBasics();
 }

@@ -39,6 +39,7 @@ import copenhagenabm.environment.Road;
 import copenhagenabm.environment.Zone;
 import copenhagenabm.loggers.AgentHistoryKMZWriter;
 import copenhagenabm.loggers.AgentDotLogger;
+import copenhagenabm.loggers.BasicAgentLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
 import copenhagenabm.main.AGENT_SPEED_MODES;
 import copenhagenabm.main.ContextManager;
@@ -60,6 +61,22 @@ import repastcity3.exceptions.RoutingException;
 import sun.tools.tree.ThisExpression;
 
 public class CPHAgent implements IAgent {
+	
+	private int birthTick = ContextManager.getCurrentTick();
+	
+	public int getBirthTick() {
+		return birthTick;
+	}
+
+	public void setBirthTick(int birthTick) {
+		this.birthTick = birthTick;
+	}
+
+	private BasicAgentLogger basicAgentLogger = new BasicAgentLogger();
+
+	public BasicAgentLogger getBasicAgentLogger() {
+		return basicAgentLogger;
+	}
 
 	private boolean didNotFindDestination = false;
 
@@ -151,6 +168,25 @@ public class CPHAgent implements IAgent {
 
 	Person destinationPerson = null;
 
+	private Zone birthZone = null;
+	private Zone destinationZone;
+
+	public Zone getBirthZone() {
+		return birthZone;
+	}
+
+	public void setBirthZone(Zone birthZone) {
+		this.birthZone = birthZone;
+	}
+
+	public Zone getDestinationZone() {
+		return destinationZone;
+	}
+
+	public void setDestinationZone(Zone destinationZone) {
+		this.destinationZone = destinationZone;
+	}
+
 	public Person getDestinationPerson() {
 		return destinationPerson;
 	}
@@ -235,6 +271,8 @@ public class CPHAgent implements IAgent {
 
 		this.originBuilding = b;
 		this.id = uniqueID++;
+		this.destinationZone = zone;
+		this.birthZone = b.getZone();
 
 		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
 
@@ -300,8 +338,10 @@ public class CPHAgent implements IAgent {
 			setCurrentRoad(road);
 			// build the geometry from the point of entry to the end of the 
 			this.addToRoute(road, road.getGeometry());
+			
+			this.sourceCoord = c;
+			
 		}
-
 
 	}
 
@@ -409,7 +449,7 @@ public class CPHAgent implements IAgent {
 
 			//			System.out.println(this.getID() + " " + this.getPosition());
 
-			OvershootData overshootData = plm.move(distance);
+			plm.move(distance);
 
 //			System.out.println(overshootData);
 
@@ -447,6 +487,7 @@ public class CPHAgent implements IAgent {
 		}
 
 		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+		
 		ContextManager.getPostgresLogger().log(currentTick, this, this.getPosition());
 
 		if (this.isAtDestination()) {
@@ -638,6 +679,15 @@ public class CPHAgent implements IAgent {
 	}
 
 	public Road getCurrentRoad() {
+		
+		try {
+			if ((currentRoad.getIdentifier().equals("-1")) || (currentRoad.getIdentifier().equals("-2"))) {
+				currentRoad = currentRoad.getParentRoad();
+			}
+		} catch (NoIdentifierException e) {
+			e.printStackTrace();
+		}
+		
 		return currentRoad;
 	}
 
@@ -720,6 +770,25 @@ public class CPHAgent implements IAgent {
 
 	public boolean isToBeKilled() {
 		return this.toBeKilled;
+	}
+
+	@Override
+	public void logBasics() {
+		String bZID = null;
+		try {
+			bZID = getBirthZone().getIdentifier();
+		} catch (NoIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String dZID = null;
+		try {
+			dZID = getDestinationZone().getIdentifier();
+		} catch (NoIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.getBasicAgentLogger().doLog(this.getID(), this.getBirthTick(), ContextManager.getCurrentTick(), bZID, dZID, this.getSourceCoord(), this.getDestinationCoordinate());
 	}
 
 }

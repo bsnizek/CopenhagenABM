@@ -13,26 +13,40 @@ import copenhagenabm.orm.HibernateUtil;
 
 
 public class PostgresLogger {
-	
+
 	Session session = null;
-	
+	SessionFactory sf = null;
+
 	public void setup() {
-		SessionFactory sf = HibernateUtil.getSessionFactory();
+		sf = HibernateUtil.getSessionFactory();
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
+		
 		System.out.println("PostgresSQLLogger instantiated ! ");
 	}
-	
-	 public void log(int tick, IAgent agent, Coordinate coordinate) {
-		 Dot d = new Dot(tick, agent, coordinate);
-		 //session.beginTransaction();
-		 session.save(d);
-		 
-	 }
 
-	 
-	 public void close() {
-		 session.getTransaction().commit();
-		 // session.disconnect();
-	 }
+	public void log(int tick, IAgent agent, Coordinate coordinate) {
+		Dot d = new Dot(tick, agent, coordinate);
+		//session.beginTransaction();
+		session.save(d);
+
+	}
+
+
+	public void close() {
+		session.getTransaction().commit();
+	}
+
+	/**
+	 * commits, closes the session and opens another one
+	 */
+	public void commit() {
+		session.getTransaction().commit();
+		
+		session = sf.getCurrentSession();
+		session.beginTransaction();	
+		
+		System.out.println("commited");
+
+	}
 }

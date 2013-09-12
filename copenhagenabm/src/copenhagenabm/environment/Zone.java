@@ -105,6 +105,9 @@ public class Zone implements FixedGeography
 
 	public void addBuilding(Building building) {
 		// add this building to the zone
+			
+			building.setZone(this);
+		
 				this.buildings.add(building);
 				// create persons in buildings and add them to the zone
 				

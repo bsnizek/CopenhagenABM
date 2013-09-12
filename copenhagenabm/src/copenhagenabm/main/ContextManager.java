@@ -38,7 +38,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.lang.ArrayIndexOutOfBoundsException;
 
-import org.geotools.factory.FactoryConfigurationError;
 import org.geotools.feature.SchemaException;
 
 import org.geotools.referencing.GeodeticCalculator;
@@ -103,8 +102,8 @@ import repastcity3.exceptions.EnvironmentError;
 import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.exceptions.ParameterNotFoundException;
 
+import copenhagenabm.loggers.BasicAgentLogger;
 import copenhagenabm.loggers.CalibrationLogger;
-import copenhagenabm.loggers.CrowdingNetworkLogger;
 import copenhagenabm.loggers.DecisionTextLogger;
 import copenhagenabm.loggers.KillLogger;
 import copenhagenabm.loggers.PostgresLogger;
@@ -173,8 +172,24 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * 
 	 */
 
-	private static DecisionTextLogger decisionTextLogger = new  DecisionTextLogger();
+	private static BasicAgentLogger basicAgentLogger = new  BasicAgentLogger();
 
+	
+	public static BasicAgentLogger getBasicAgentLogger() {
+		return basicAgentLogger;
+	}
+
+	public static void setBasicAgentLogger(BasicAgentLogger basicAgentLogger) {
+		ContextManager.basicAgentLogger = basicAgentLogger;
+	}
+
+	/**
+	 * 
+	 *  A logger for the decision matrix
+	 * 
+	 */
+
+	private static DecisionTextLogger decisionTextLogger = new  DecisionTextLogger();
 
 	/**
 	 * 
@@ -297,7 +312,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	//	private static SimpleLoadLogger simpleLoadLogger = new SimpleLoadLogger();
 
-	private CrowdingNetworkLogger crowdingNetworkLogger;
+	//	private CrowdingNetworkLogger crowdingNetworkLogger;
 
 	//	private static DecisionLogger decisionLogger;
 
@@ -623,6 +638,15 @@ public class ContextManager implements ContextBuilder<Object> {
 			e1.printStackTrace();
 		}
 
+		// let us set up the basic agent  logger 
+		try {
+			ContextManager.getBasicAgentLogger().setup();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
 		// and the calibration logger
 		// TODO lets wrap this one with IF in calibration mode
 		// let us set up the decision text logger 
@@ -691,8 +715,8 @@ public class ContextManager implements ContextBuilder<Object> {
 		} else {
 
 			// setupCrowdingNetworkDumper();
-			
-			
+
+
 			// let us empty the road logger dir
 
 			// we instantiate a roadLoadLogger with the given 
@@ -1035,7 +1059,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	private void createTimeTables() {
-		
+
 		int spawnCounter = 0;
 
 		String gisDataDir = ContextManager.getProperty(GlobalVars.GISDataDirectory);
@@ -1057,11 +1081,11 @@ public class ContextManager implements ContextBuilder<Object> {
 			schedule.schedule(ScheduleParameters.createOneTime(spawn.getSpawnAtTick(), 
 					ScheduleParameters.LAST_PRIORITY, 1), this, 
 					"spawnAgent", spawn.getZoneFrom(), spawn.getZoneTo());
-			
+
 			spawnCounter++;
-			
+
 		}
-		
+
 		System.out.println(spawnCounter + " SPAWNS" );
 
 	}
@@ -1080,6 +1104,17 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		agentFactory.createAgent(from, to, resultRouteID, matchedGPSRoute);
 
+	}
+
+	/**
+	 * Returns true everytime a division of currentStep by stepToFireOn returns 0.0d
+	 * @param tickToFireOn
+	 * @param currentTick
+	 * @return
+	 */
+	public static boolean fireAtEvery(int tickToFireOn, int currentTick) {
+		double xx = currentTick / (tickToFireOn * 1.0d);
+		return ((Math.round(xx) - xx) ==0.0d);
 	}
 
 	/**
@@ -1141,7 +1176,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		System.out.println("Model terminated ... " + (endTime - startTime ) / 1000 + "seconds");
 
 
-//		emailTool.sendMail("model finished in " + (startTime - endTime) / 1000 + "seconds");
+		//		emailTool.sendMail("model finished in " + (startTime - endTime) / 1000 + "seconds");
 
 	}
 
@@ -1219,51 +1254,67 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	}
 
+	public synchronized static int getCurrentTick() {
+		return new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+	}
+
+
 	public synchronized void stepStandardAgents() throws Exception {
 
-		int currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
-
-		System.out.println("TICK " + currentTick);
+		int currentTick = getCurrentTick();
 
 		ContextManager.getRoadLoadLogger().tick(currentTick);
 
 		Iterable<IAgent> agents = agentGeography.getAllObjects();
 
-		// agents = agentGeography.getAllObjects();
+		int n = 0;
 
 		for (IAgent cphA : agents) {
+
+			n++;
 
 			if (cphA == null) {
 				System.out.println("XXX");
 			} else {
 
-//				if (cphA.isTerminated()) {
-//
-//					// cphA.setTerminated(true);
-//
-//					// we write the routes etc into files (shapefile, KML)
-//					// cphA.writeHistory(this.getModelRunID());
-//
-//					// put the route into the routegeography
-//
-//					/*
-//					 * Route route = cphA.getRoute();
-//					 * ContextManager.getRouteContext().add(route);
-//					 * */
-//
-//					removeAgent(cphA);
-//
-//				} else {
-					cphA.step();
-//				}
+				//				if (cphA.isTerminated()) {
+				//
+				//					// cphA.setTerminated(true);
+				//
+				//					// we write the routes etc into files (shapefile, KML)
+				//					// cphA.writeHistory(this.getModelRunID());
+				//
+				//					// put the route into the routegeography
+				//
+				//					/*
+				//					 * Route route = cphA.getRoute();
+				//					 * ContextManager.getRouteContext().add(route);
+				//					 * */
+				//
+				//					removeAgent(cphA);
+				//
+				//				} else {
+				cphA.step();
+				//				}
 			}
 		}
+		System.out.println("TICK " + currentTick + " - " + n + " agents.");
+
+		// let us commit to the postgreSQL database
+		if (isPostgreSQLLoggerOn()) {
+			int tickToFireOn = ContextManager.dumpAtEveryTick();
+			if (ContextManager.fireAtEvery(tickToFireOn, currentTick)) {
+				ContextManager.getPostgresLogger().commit();
+			}
+
+		}
+
 	}
-	
-	
+
+
 	public void stepCalibrationAgents() throws Exception {
 
-		int currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+		int currentTick = getCurrentTick();
 
 		Iterable<IAgent> agents = agentGeography.getAllObjects();
 
@@ -1419,12 +1470,12 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public static void removeAgentsToBeRemoved() {
 
-//		System.out.println("BEFORE " + getAgentContext().getObjects(IAgent.class).size());
-//		System.out.println("TO BE REMOVED " + agentsToBeRemoved.size());
+		//		System.out.println("BEFORE " + getAgentContext().getObjects(IAgent.class).size());
+		//		System.out.println("TO BE REMOVED " + agentsToBeRemoved.size());
 
 		// let us check whether there are doubles 
 		Set<IAgent> set = new HashSet<IAgent>(agentsToBeRemoved);
-		
+
 		if(set.size() < agentsToBeRemoved.size()){
 			System.out.println("DUPLICATES !!!");
 		}
@@ -1436,6 +1487,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 			if ((a!=null) && getAgentContext().contains(a)) {
 				try {
+					a.logBasics();
 					Context<IAgent> ac = getAgentContext();
 					ac.remove(a);
 					// System.out.print(a);
@@ -1450,7 +1502,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		agentsToBeRemoved = new ArrayList<IAgent>();
 
-//		System.out.println("AFTER " + getAgentContext().getObjects(IAgent.class).size());
+		//		System.out.println("AFTER " + getAgentContext().getObjects(IAgent.class).size());
 	}
 
 	public void spawnAgents() {
@@ -1465,11 +1517,11 @@ public class ContextManager implements ContextBuilder<Object> {
 			if (!ContextManager.agentsToBeRemoved.contains(a)) {
 				addAgentToContext(a);
 				a.snapAgentToRoad();
-//				removeAgentFromAgentsToBeSpawned(a);
+				//				removeAgentFromAgentsToBeSpawned(a);
 			}
 		}
 	}
-	
+
 	public void removeAgentFromAgentsToBeSpawned(IAgent agent) {
 		ContextManager.getAgentsToBeSpawned().remove(agent);
 	}
@@ -1479,7 +1531,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		spawnAgents();
 		ContextManager.agentsToBeSpawned = new ArrayList<IAgent>();
 		removeAgentsToBeRemoved();
-		
+
 		int currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
 		int terminationTick = new Integer((int) (new Integer(ContextManager.getProperty("EndTime")) ));
 
@@ -2239,6 +2291,10 @@ public class ContextManager implements ContextBuilder<Object> {
 		return getProperty("SimpleLoadLoggerFileName");
 	}
 
+	public static String getBasicAgentLoggerFileName() {
+		return getProperty("BasicAgentLoggerFileName");
+	}
+
 	public static boolean isSimpleLoadLoggerOn() {
 		return getProperty("SimpleLoadLogger").equals("ON");
 	}
@@ -2260,7 +2316,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static RoadLoadLogger getRoadLoadLogger() {
 		return roadLoadLogger;
 	}
-	
+
 
 	// --------------------------------------------------
 
@@ -2321,10 +2377,12 @@ public class ContextManager implements ContextBuilder<Object> {
 		ContextManager.crowdingNetwork = new RoadNetwork();
 
 	}
-	
+
 	public static int dumpAtEveryTick() {
 		return new Integer(getProperty("dumpAtEveryTick"));
 	}
+
+
 
 
 }

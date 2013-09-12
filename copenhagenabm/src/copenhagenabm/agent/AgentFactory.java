@@ -8,12 +8,6 @@ import copenhagenabm.main.ContextManager;
 import copenhagenabm.routes.MatchedGPSRoute;
 
 public class AgentFactory {
-
-	
-	public AgentFactory() {
-		
-	}
-	
 	
 	
 	/*

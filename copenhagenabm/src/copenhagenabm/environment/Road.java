@@ -174,6 +174,14 @@ public class Road implements FixedGeography  {
 		
 	}
 	
+	public Road getParentRoad() {
+		return parentRoad;
+	}
+
+	public void setParentRoad(Road parentRoad) {
+		this.parentRoad = parentRoad;
+	}
+
 	private void buildGeometry() {
 		Coordinate splitCoordinate = sourceJunction.getCoords();
 		this.geometry = chopLineStringTool.chop(splitCoordinate, this.targetJunction.getCoords());

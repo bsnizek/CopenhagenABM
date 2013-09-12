@@ -24,6 +24,7 @@ import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.agent.IAgent;
 import copenhagenabm.environment.FixedGeography;
+import copenhagenabm.environment.Zone;
 import copenhagenabm.main.ContextManager;
 
 import repastcity3.exceptions.NoIdentifierException;
@@ -51,6 +52,15 @@ public class Building implements FixedGeography {
 	 * them in sync with the projection.
 	 */
 	private Coordinate coords;
+
+	/**
+	 * The zone the building resides in.
+	 */
+	private Zone zone;
+
+	public Zone getZone() {
+		return zone;
+	}
 
 	public Building() {
 		this.agents = new ArrayList<IAgent>();
@@ -131,6 +141,11 @@ public class Building implements FixedGeography {
 
 	public void setPersons(Integer persons) {
 		this.persons = persons;
+	}
+
+	public void setZone(Zone zone) {
+		this.zone = zone;
+		
 	}
 
 
