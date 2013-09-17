@@ -62,7 +62,17 @@ import sun.tools.tree.ThisExpression;
 
 public class CPHAgent implements IAgent {
 	
+	RoadLoadLogger roadLoadLogger = ContextManager.getRoadLoadLogger();
+	
 	private int birthTick = ContextManager.getCurrentTick();
+	
+	private BasicAgentLogger basicAgentLogger = new BasicAgentLogger();
+	
+	/**
+	 * Is the agent a calibration agent ? 
+	 */
+	private boolean isCalibrationAgent = false;
+	
 	
 	public int getBirthTick() {
 		return birthTick;
@@ -71,8 +81,6 @@ public class CPHAgent implements IAgent {
 	public void setBirthTick(int birthTick) {
 		this.birthTick = birthTick;
 	}
-
-	private BasicAgentLogger basicAgentLogger = new BasicAgentLogger();
 
 	public BasicAgentLogger getBasicAgentLogger() {
 		return basicAgentLogger;
@@ -88,10 +96,6 @@ public class CPHAgent implements IAgent {
 		this.didNotFindDestination = didNotFindDestination;
 	}
 
-	/**
-	 * Is the agent a calibration agent ? 
-	 */
-	private boolean isCalibrationAgent = false;
 
 	public boolean isExplicative() {
 		return isCalibrationAgent;
@@ -103,7 +107,6 @@ public class CPHAgent implements IAgent {
 
 	private ArrayList<Measurement> history = new ArrayList<Measurement>();
 
-	//	private static Logger LOGGER = Logger.getLogger(CPHAgent.class.getName());
 	GeometryFactory fact = new GeometryFactory();
 
 	private static int uniqueID = 0;
@@ -133,8 +136,8 @@ public class CPHAgent implements IAgent {
 
 	double[] distAndAngle = new double[2];
 
-	double distToTravel = (GlobalVars.GEOGRAPHY_PARAMS.AGENT_SPEED) * 
-			GlobalVars.GEOGRAPHY_PARAMS.TICK_LENGTH;
+//	double distToTravel = (GlobalVars.GEOGRAPHY_PARAMS.AGENT_SPEED) * 
+//			GlobalVars.GEOGRAPHY_PARAMS.TICK_LENGTH;
 
 	private PolyLineMover plm;
 	private Building originBuilding;
@@ -143,7 +146,7 @@ public class CPHAgent implements IAgent {
 	// the route the agent has taken until the current point in time
 	private Route route = null;
 
-	private HashMap<String, Boolean> visitedRoads = new HashMap<String, Boolean>();
+//	private HashMap<String, Boolean> visitedRoads = new HashMap<String, Boolean>();
 
 
 	//	private EuclideanDistanceToPoint euclideanTool = new EuclideanDistanceToPoint();
@@ -274,7 +277,7 @@ public class CPHAgent implements IAgent {
 		this.destinationZone = zone;
 		this.birthZone = b.getZone();
 
-		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
+//		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
 
 		try {
 			destinationPerson = zone.getRandomPerson();
@@ -330,6 +333,7 @@ public class CPHAgent implements IAgent {
 
 		} else {
 
+			// project the coordinate from the building onto the road 
 			c = ContextManager.getRoadCoordinateForBuilding(this.originBuilding);
 
 			ContextManager.moveAgent(this, fact.createPoint(c)); // move the agent to the projection on the road network*/
@@ -337,7 +341,7 @@ public class CPHAgent implements IAgent {
 			Road road = ContextManager.getRoadForBuilding(this.originBuilding);
 			setCurrentRoad(road);
 			// build the geometry from the point of entry to the end of the 
-			this.addToRoute(road, road.getGeometry());
+//			this.addToRoute(road, road.getGeometry());
 			
 			this.sourceCoord = c;
 			
@@ -351,7 +355,7 @@ public class CPHAgent implements IAgent {
 	 * @param g 
 	 */
 	private void addToRoute(Road r, Geometry g) {
-		this.getRoute().addEdgeGeometry(r, g);
+//		this.getRoute().addEdgeGeometry(r, g);
 	}
 
 	//	@Override
@@ -372,9 +376,6 @@ public class CPHAgent implements IAgent {
 			}
 
 			Road cr = getCurrentRoad();
-
-			// let us log the entry on the first edge if the roadLoadLogger is switched on
-			RoadLoadLogger roadLoadLogger = ContextManager.getRoadLoadLogger();
 
 			if (roadLoadLogger != null) {
 				try {

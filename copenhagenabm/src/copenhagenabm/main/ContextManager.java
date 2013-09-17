@@ -1532,7 +1532,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		ContextManager.agentsToBeSpawned = new ArrayList<IAgent>();
 		removeAgentsToBeRemoved();
 
-		int currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+		int currentTick = getCurrentTick();
 		int terminationTick = new Integer((int) (new Integer(ContextManager.getProperty("EndTime")) ));
 
 		if (currentTick>terminationTick && !ContextManager.inCalibrationMode()) {

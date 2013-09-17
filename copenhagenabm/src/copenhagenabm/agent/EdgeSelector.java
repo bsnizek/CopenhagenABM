@@ -8,6 +8,7 @@ import copenhagenabm.environment.RoadNetwork;
 //import copenhagenabm.loggers.SimpleLoadLogger;
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
+import copenhagenabm.routes.Route;
 
 import repastcity3.exceptions.NoIdentifierException;
 
@@ -21,12 +22,12 @@ public class EdgeSelector {
 
 	private CPHAgent agent;
 
-//	private SimpleLoadLogger simpleLoadLogger;
+	//	private SimpleLoadLogger simpleLoadLogger;
 
 	public DecisionMatrix getDecisionMatrix() {
 		return decisionMatrix;
 	}
-	
+
 
 	public EdgeSelector(List<Road> roads, Road currentRoad, CPHAgent agent) {
 
@@ -36,7 +37,7 @@ public class EdgeSelector {
 
 		ArrayList<Road> newRoads = new ArrayList<Road>();
 
-//		this.simpleLoadLogger = ContextManager.getSimpleLoadLogger();
+		//		this.simpleLoadLogger = ContextManager.getSimpleLoadLogger();
 
 		for (Road r : roads) {
 			if (roads.size()>1) {
@@ -126,15 +127,18 @@ public class EdgeSelector {
 
 				if (GlobalVars.SCORING_PARAMS.AVOID_ALREADY_VISITED) {
 					double aav = 10.0;
-					for (Road r : agent.getRoute().getRouteAdsRoadList()) {
-						try {
-							if (r.getIdentifier() == rr.getIdentifier()) {
-								aav = 0.0d;
+					Route route = agent.getRoute();
+					if (route != null) {
+						for (Road r : route.getRouteAdsRoadList()) {
+							try {
+								if (r.getIdentifier() == rr.getIdentifier()) {
+									aav = 0.0d;
+								}
+							} catch (NoIdentifierException e) {
+								e.printStackTrace();
 							}
-						} catch (NoIdentifierException e) {
-							e.printStackTrace();
+							decisionMatrix.addCell("avoid_already_visited", rr, aav);
 						}
-						decisionMatrix.addCell("avoid_already_visited", rr, aav);
 					}
 				}
 
@@ -203,16 +207,16 @@ public class EdgeSelector {
 		}
 
 
-//		if (!ContextManager.inCalibrationMode()) {
-//
-//			try {
-//				simpleLoadLogger.addVisitedToRoad(r.getIdentifier(), ContextManager.getGroupingFactor());
-//			} catch (NoIdentifierException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-		
+		//		if (!ContextManager.inCalibrationMode()) {
+		//
+		//			try {
+		//				simpleLoadLogger.addVisitedToRoad(r.getIdentifier(), ContextManager.getGroupingFactor());
+		//			} catch (NoIdentifierException e) {
+		//				// TODO Auto-generated catch block
+		//				e.printStackTrace();
+		//			}
+		//		}
+
 		this.agent.setCurrentRoad(r);
 
 		return r;
