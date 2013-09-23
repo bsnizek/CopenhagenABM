@@ -11,6 +11,7 @@ import repastcity3.environment.SpatialIndexManager;
 import com.infomatiq.jsi.SpatialIndex;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
 
 import copenhagenabm.environment.Road;
 import copenhagenabm.main.ContextManager;
@@ -121,6 +122,11 @@ public class SnapTool {
 		
 		return resultcoord;
 
+	}
+	
+	public double getDistanceToLineString(LineString linestring, Coordinate coordinate) {
+		Coordinate c = getProjectedPointOnPolyline(linestring, coordinate);
+		return ContextManager.simpleDistance.distance(c, coordinate);
 	}
 
 }

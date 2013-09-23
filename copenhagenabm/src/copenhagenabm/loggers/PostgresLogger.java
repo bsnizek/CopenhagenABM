@@ -25,8 +25,8 @@ public class PostgresLogger {
 		System.out.println("PostgresSQLLogger instantiated ! ");
 	}
 
-	public void log(int tick, IAgent agent, Coordinate coordinate) {
-		Dot d = new Dot(tick, agent, coordinate);
+	public void log(int tick, IAgent agent) {
+		Dot d = new Dot(tick, agent, agent.getPosition());
 		//session.beginTransaction();
 		session.save(d);
 

@@ -61,19 +61,20 @@ import repastcity3.exceptions.RoutingException;
 import sun.tools.tree.ThisExpression;
 
 public class CPHAgent implements IAgent {
-	
+
+	private int birthTick = 0;
+	public int DESTINATION_SNAP = 0;
+
 	RoadLoadLogger roadLoadLogger = ContextManager.getRoadLoadLogger();
-	
-	private int birthTick = ContextManager.getCurrentTick();
-	
+
 	private BasicAgentLogger basicAgentLogger = new BasicAgentLogger();
-	
+
 	/**
 	 * Is the agent a calibration agent ? 
 	 */
 	private boolean isCalibrationAgent = false;
-	
-	
+
+
 	public int getBirthTick() {
 		return birthTick;
 	}
@@ -136,8 +137,8 @@ public class CPHAgent implements IAgent {
 
 	double[] distAndAngle = new double[2];
 
-//	double distToTravel = (GlobalVars.GEOGRAPHY_PARAMS.AGENT_SPEED) * 
-//			GlobalVars.GEOGRAPHY_PARAMS.TICK_LENGTH;
+	//	double distToTravel = (GlobalVars.GEOGRAPHY_PARAMS.AGENT_SPEED) * 
+	//			GlobalVars.GEOGRAPHY_PARAMS.TICK_LENGTH;
 
 	private PolyLineMover plm;
 	private Building originBuilding;
@@ -146,10 +147,7 @@ public class CPHAgent implements IAgent {
 	// the route the agent has taken until the current point in time
 	private Route route = null;
 
-//	private HashMap<String, Boolean> visitedRoads = new HashMap<String, Boolean>();
-
-
-	//	private EuclideanDistanceToPoint euclideanTool = new EuclideanDistanceToPoint();
+	//	private HashMap<String, Boolean> visitedRoads = new HashMap<String, Boolean>();
 
 	// private static volatile NearestRoadCoordCache nearestRoadCoordCache;
 	/*
@@ -160,7 +158,6 @@ public class CPHAgent implements IAgent {
 	// To stop threads competing for the cache:
 	//	private static Object buildingsOnRoadCacheLock = new Object();
 
-	private int DESTINATION_SNAP = new Integer(ContextManager.getProperty(GlobalVars.distanceSnap));
 	private Coordinate sourceCoord;
 
 	private int gpsRouteID;
@@ -218,6 +215,7 @@ public class CPHAgent implements IAgent {
 		if (distance < DESTINATION_SNAP) {
 			// System.out.println("Agent " + this.getID() + " on edge " + this.getRoute().getGPSID() + " is at destination");
 			ContextManager.resetNumberOfKills();
+
 			return true;
 		}
 		return false;
@@ -277,7 +275,7 @@ public class CPHAgent implements IAgent {
 		this.destinationZone = zone;
 		this.birthZone = b.getZone();
 
-//		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
+		//		this.setRoute(new Route(this.id, this.getGpsRouteID(), ContextManager.getModelRunID()));	// this is a little hacked - we set the GPS ID to the agent ID as well.
 
 		try {
 			destinationPerson = zone.getRandomPerson();
@@ -290,6 +288,18 @@ public class CPHAgent implements IAgent {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		
+		try {
+			birthTick = ContextManager.getCurrentTick();
+		} catch (Exception e) {
+			birthTick = 0;
+		}
+
+		try {
+			DESTINATION_SNAP = ContextManager.getDistanceSnap();
+		} catch (Exception e) {
+			DESTINATION_SNAP = 30;
 		}
 	}
 
@@ -341,10 +351,10 @@ public class CPHAgent implements IAgent {
 			Road road = ContextManager.getRoadForBuilding(this.originBuilding);
 			setCurrentRoad(road);
 			// build the geometry from the point of entry to the end of the 
-//			this.addToRoute(road, road.getGeometry());
-			
+			//			this.addToRoute(road, road.getGeometry());
+
 			this.sourceCoord = c;
-			
+
 		}
 
 	}
@@ -355,7 +365,7 @@ public class CPHAgent implements IAgent {
 	 * @param g 
 	 */
 	private void addToRoute(Road r, Geometry g) {
-//		this.getRoute().addEdgeGeometry(r, g);
+		//		this.getRoute().addEdgeGeometry(r, g);
 	}
 
 	//	@Override
@@ -414,18 +424,14 @@ public class CPHAgent implements IAgent {
 			Point newTargetPoint = fact.createPoint(newRoad.getTargetJunction().getCoords());
 			Point crSourcePoint = fact.createPoint(cr.getEdge().getSource().getCoords());
 
-			// TODO : ***1
-			if (crSourcePoint.distance(newTargetPoint)<DESTINATION_SNAP) {
-				setTargetJunction(cr.getEdge().getTarget());
-			} else {
-				setTargetJunction(cr.getEdge().getSource());
-			}
+			double d = ContextManager.simpleDistance.distance(crSourcePoint, newTargetPoint);
 
-			//			if (newRoad.getJunctions().get(0).getPoint().distance(fact.createPoint(firstCoordinateOnRoad)) < DESTINATION_SNAP) {
-			//				setTargetJunction(newRoad.getJunctions().get(1));
-			//			} else {
-			//				setTargetJunction(newRoad.getJunctions().get(0));
-			//			}
+
+			if (d == 0.0d) {
+				this.setTargetJunction(cr.getEdge().getSource());
+			} else {
+				this.setTargetJunction(cr.getEdge().getTarget());
+			}
 
 			ContextManager.moveAgent(this, fact.createPoint(firstCoordinateOnRoad));
 
@@ -446,13 +452,20 @@ public class CPHAgent implements IAgent {
 
 			double distance = speed * stepLength;
 
-//			System.out.println("DISTANCE " + distance);
-
+			OvershootData overshoot = plm.move(distance);
+			
+			if (this.getOrthodromicDistance(this.getPosition(), destinationCoordinate)<DESTINATION_SNAP) {
+				plm.terminate(destinationCoordinate);
+			}
+			
+			if (overshoot != null) {
+				this.plm = new PolyLineMover(this, overshoot.getRoad(), overshoot.getTargetJunction());
+			}
+			
+			//			System.out.println("DISTANCE " + distance);
 			//			System.out.println(this.getID() + " " + this.getPosition());
-
-			plm.move(distance);
-
-//			System.out.println(overshootData);
+			//			plm.move(distance);
+			//			System.out.println(overshootData);
 
 		}
 
@@ -487,9 +500,9 @@ public class CPHAgent implements IAgent {
 			history.add(m);
 		}
 
-		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
-		
-		ContextManager.getPostgresLogger().log(currentTick, this, this.getPosition());
+//		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+
+		//		ContextManager.getPostgresLogger().log(currentTick, this.age);
 
 		if (this.isAtDestination()) {
 			ContextManager.removeAgent(this);
@@ -508,7 +521,7 @@ public class CPHAgent implements IAgent {
 		return sum;
 	}
 
-	private double getSpeed() {
+	public double getSpeed() {
 		if (ContextManager.getAgentSpeedMode() == AGENT_SPEED_MODES.STATIC) {
 			return ContextManager.getAgentSpeed();
 		} else {
@@ -680,7 +693,7 @@ public class CPHAgent implements IAgent {
 	}
 
 	public Road getCurrentRoad() {
-		
+
 		try {
 			if ((currentRoad.getIdentifier().equals("-1")) || (currentRoad.getIdentifier().equals("-2"))) {
 				currentRoad = currentRoad.getParentRoad();
@@ -688,7 +701,7 @@ public class CPHAgent implements IAgent {
 		} catch (NoIdentifierException e) {
 			e.printStackTrace();
 		}
-		
+
 		return currentRoad;
 	}
 

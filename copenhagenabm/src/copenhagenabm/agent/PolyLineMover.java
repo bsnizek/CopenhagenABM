@@ -16,6 +16,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.environment.Road;
@@ -23,6 +24,7 @@ import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
 import repastcity3.environment.Junction;
 
+import copenhagenabm.tools.EuclideanDistanceToPoint;
 import copenhagenabm.tools.SnapTool;
 import copenhagenabm.tools.geodetic.GeodeticCalculator;
 
@@ -38,40 +40,53 @@ import copenhagenabm.tools.geodetic.GeodeticCalculator;
  */
 public class PolyLineMover {
 
+	private static final boolean DEBUG_MODE = false;
 	GeometryFactory fact = new GeometryFactory();
 	private CPHAgent agent;
-	private LineString currentLineSegment;
 	double[] distAndAngle = new double[2];
+
 	int currentLineSegmentID;
+	private LineString currentLineSegment;
+	double currentPositionOnPolyline = 0.0d;		// distance from the source junction to the current position
+
 	private ArrayList<LineString> polylineParts  = new ArrayList<LineString>();
-	SnapTool sTool = null;
+	SnapTool sTool = ContextManager.getSnapTool();
 	private Road road;
 	private Junction targetJunction;
-
+	private double lineLength = 0.0d;
 
 	public PolyLineMover(CPHAgent agent, Road road, Junction targetJunction) {
 
 		this.agent = agent;
 		this.road = road;
 		this.targetJunction = targetJunction;
-		sTool = ContextManager.getSnapTool();
-
 
 		// build an array of sub-linestrings
 		// TODO : use ChopLineStringTool !!
 
 		Geometry roadGeom = road.getGeometry();
+
+		if (DEBUG_MODE) {
+			lineLength = roadGeom.getLength();
+		} else {
+			lineLength = getOrthodromicLineLength(roadGeom);
+		}
+
+
 		Coordinate[] roadCoords = roadGeom.getCoordinates();
 
 		List<Coordinate> rc =  Arrays.asList(roadCoords);
 
-		double SNAP_DISTANCE = GlobalVars.GEOGRAPHY_PARAMS.SNAP_DISTANCE;
+		if (DEBUG_MODE) {
 
-		// check the direction
-		if (rc.get(0).distance(targetJunction.getCoords()) > SNAP_DISTANCE) {
+			if (rc.get(0).distance(agent.getPosition()) > rc.get(rc.size()-1).distance(agent.getPosition())) {
+				Collections.reverse(rc);
+			} 
 		} else {
-			// the polyline is backwards
-			Collections.reverse(rc);
+			if (getOrthodromicDistance(rc.get(0), agent.getPosition()) > getOrthodromicDistance(rc.get(rc.size()-1), agent.getPosition())) {
+				Collections.reverse(rc);
+			}
+
 		}
 
 		for (int j=0; j<rc.size()-1;j++) {
@@ -82,32 +97,40 @@ public class PolyLineMover {
 
 		// lets place the agent on the polyline and figure out the currentLineSegmentID
 
-		getCurrentLineSegmentAndID();
+		getPositionCurrentLineSegmentAndID();
 
 	}
-	
-	public void getCurrentLineSegmentAndID() {
-		double v = Double.MAX_VALUE;
-		for (int i=0; i<polylineParts.size();i++) {
 
-			Coordinate pPoint = sTool.getProjectedPointOnPolyline(polylineParts.get(i), agent.getPosition());
+	/**
+	 * 
+	 * Figures out where one the polyline the agents current position is on the polyline and sets 
+	 * currentLineSegmentID, currentLineSegment and currentPositionOnPolyline
+	 * 
+	 */
+	public void getPositionCurrentLineSegmentAndID() {
 
-			// TODO: unhack
-			if (pPoint == null) {
-				currentLineSegmentID = i;
-				currentLineSegment = polylineParts.get(i);
-				break;
-			} else {
-
-				double d = getOrthodromicDistance(agent.getPosition(), pPoint);
-				if ( d < v ) {
-					v = d;
-					currentLineSegmentID = i;
-					currentLineSegment = polylineParts.get(i);
-				}
-			}
+		double d = 0.0;
+		int i = 0;
+		Coordinate currPos = agent.getPosition();
+		
+		
+		
+//		while (!polylineParts.get(i).covers(fact.createPoint(currPos))) { 
+		while (this.sTool.getDistanceToLineString(polylineParts.get(i), currPos) >= 0.1) {
+//			double dd = 
+			d = d + getOrthodromicLineLength(polylineParts.get(i));
+			i++;
 		}
+		currentLineSegmentID = i;
+		currentLineSegment = polylineParts.get(i);
+		if (DEBUG_MODE) {
+			d = d + currPos.distance(polylineParts.get(i).getCoordinateN(0));
+		} else {
+			d = d + getOrthodromicDistance(currPos, polylineParts.get(i).getCoordinateN(0));
+		}
+		this.currentPositionOnPolyline = d;
 	}
+
 
 	public CPHAgent getAgent() {
 		return agent;
@@ -147,61 +170,38 @@ public class PolyLineMover {
 	 * @return
 	 */
 	public double getDistanceToEndOfPolyline() {
-
-		if (polylineParts.size() == 1) {
-
-			Coordinate targetCoordinate = this.targetJunction.getCoords();
-			PolyLineMover.distance(this.agent.getPosition(), targetCoordinate, distAndAngle);
-			return distAndAngle[0];
-
-		} else {
-
-			double sum = 0.0d;
-			for (int i=currentLineSegmentID+1; i< polylineParts.size(); i++) {
-				// double od = polylineParts.get(i).getStartPoint().getCoordinate().distance(polylineParts.get(i).getEndPoint().getCoordinate());
-				PolyLineMover.distance( polylineParts.get(i).getStartPoint().getCoordinate(),polylineParts.get(i).getEndPoint().getCoordinate(),distAndAngle);
-
-				sum = sum + distAndAngle[0];
-			}
-
-			// and then add the rest of the current poly to the sum 
-			Coordinate aPos = agent.getPosition();
-			Coordinate lSEp = currentLineSegment.getEndPoint().getCoordinate();
-
-			if (distAndAngle[0] < new Integer(ContextManager.getProperty(GlobalVars.distanceSnap))) {
-				//			System.out.println(this.agent.getID());
-				return 0.0d;
-			} else  {
-
-				PolyLineMover.distance(aPos, lSEp, distAndAngle);
-
-
-
-				sum = sum + distAndAngle[0];
-
-				//		sum = sum + agent.getPosition().distance(currentLineSegment.getEndPoint().getCoordinate());
-
-				return sum;
-
-			}}
-
+		return this.lineLength - this.currentPositionOnPolyline;
 	}
-
 
 	public double getOrthodromicDistanceToEndOfPolyline() {
 		// first accumulate the lengths on the poly from the next segment on 
 		double sum = 0.0d;
 		for (int i=currentLineSegmentID+1; i< polylineParts.size(); i++) {
-			double od = getOrthodromicDistance(polylineParts.get(i).getStartPoint().getCoordinate(), polylineParts.get(i).getEndPoint().getCoordinate());
+
+			double od;
+
+			if (DEBUG_MODE) {
+
+				od = polylineParts.get(i).getStartPoint().getCoordinate().distance(polylineParts.get(i).getEndPoint().getCoordinate());
+
+			} else {
+
+				od = getOrthodromicDistance(polylineParts.get(i).getStartPoint().getCoordinate(), polylineParts.get(i).getEndPoint().getCoordinate());
+			}
 			sum = sum + od;
 		}
 
 		// and then add the rest of the current poly to the sum
 
-		sum = sum + agent.getPosition().distance(currentLineSegment.getEndPoint().getCoordinate());
+		if (DEBUG_MODE) {
+			sum = sum + agent.getPosition().distance(currentLineSegment.getEndPoint().getCoordinate());
+		} else {
+			sum = sum + getOrthodromicDistance(agent.getPosition(), currentLineSegment.getEndPoint().getCoordinate());
+		}
 
 		return sum;
 	}
+
 
 	public Junction getOppositeJunction(Road road, Junction sourceJunction) {
 		ArrayList<Junction> jS = road.getJunctions();
@@ -220,8 +220,8 @@ public class PolyLineMover {
 		// 3. subtract RemainingDistanceOfStep-remainingDistanceOnPolyline -> overshoot
 		// 4. make a road selection
 		// 5. if (the length of the next road < overshoot) go back to 4
-		
-		getCurrentLineSegmentAndID();
+
+		getPositionCurrentLineSegmentAndID();
 
 		double remainingDistanceOfStep = distance;
 
@@ -229,34 +229,84 @@ public class PolyLineMover {
 
 		double overshoot = remainingDistanceOfStep - remainingDistanceOnPolyline;
 
-		if (overshoot >= 0.0d) {
+		if (overshoot > 0.0d) {
 
 			List<Road> roads = this.targetJunction.getRoads();
 			EdgeSelector es = new EdgeSelector(roads, road, this.getAgent());
 			Road newRoad = es.getRoad();
 
-			// place the agent on the beginning of the road
-			placeAgentOnRoad(road, 0);
+			// place the agent at the end  of the road
+
+			ContextManager.moveAgent(agent, fact.createPoint(this.targetJunction.getCoords()));
 
 			if (agent.isAtDestination()) {
+				this.logToPostgres();
 				return null;
 			}
-
 
 			this.targetJunction = getOppositeJunction(newRoad, this.targetJunction);
 
 			PolyLineMover plm = new PolyLineMover(agent, newRoad, this.targetJunction);
-			plm.move(overshoot);
+
+
+			OvershootData oD = plm.move(overshoot);
+
+			if (oD != null) {
+				
+				return oD;
+
+			} else {
+
+				return new OvershootData(newRoad, targetJunction, overshoot);
+			}
+
+			//			this.logToPostgres();
 
 		} else { 		
-			// double roadLength = this.getOrthodromicLineLength((LineString) this.road.getGeometry());
-			// double distFromOrigin =  + overshoot;
-			
-			placeAgentOnRoad(road, remainingDistanceOnPolyline);
-		
+
+			double nextPosition = currentPositionOnPolyline + distance;
+
+			if (overshoot == 0.0d) {
+
+				List<Road> roads = this.targetJunction.getRoads();
+				EdgeSelector es = new EdgeSelector(roads, road, this.getAgent());
+				Road newRoad = es.getRoad();
+
+				this.currentPositionOnPolyline = 0.0d;
+				this.road = newRoad;
+
+				Coordinate tjC = road.getTargetJunction().getCoords();
+				Coordinate aP = agent.getPosition();
+
+				if (tjC.equals(aP)) {
+					this.targetJunction = this.getOppositeJunction(road, road.getTargetJunction());
+				} else {
+					this.targetJunction = road.getTargetJunction();
+				}
+
+				nextPosition = 0.0d;
+				
+				placeAgentOnRoad(road, nextPosition);
+				logToPostgres();
+
+				return new OvershootData(road, targetJunction, nextPosition);
+
+			} 
+
+			placeAgentOnRoad(road, nextPosition);
+
+			this.logToPostgres();
+
+
 			if (agent.isAtDestination()) {
+				this.logToPostgres();
 				return null;
 			}
+
+
+
+			//			return new OvershootData(distance - remainingDistanceOnPolyline, currentLineSegment.getEndPoint());
+
 
 		}
 		return null;
@@ -272,36 +322,61 @@ public class PolyLineMover {
 	 * @param targetJunction
 	 */
 	public void placeAgentOnRoad(Road road, double distance) {
-		
+
 		// we assume the direction of the polyline is right
-	
+
 		// lets loop through the polyline parts
-		
-		double d2 = distance;
 
-		for (int i=0; i<currentLineSegmentID; i++) {
-			d2 = d2 - getOrthodromicLineLength(polylineParts.get(i));
-			
-			if (d2<0) {
-				// get the setoff base coordinate
-				Coordinate setoffCoordinate = polylineParts.get(i).getCoordinateN(0);
-				Coordinate targetCoordinate = polylineParts.get(i).getCoordinateN(1);
+		if (distance==0.0d) {
 
-				distance(setoffCoordinate,
-						targetCoordinate, distAndAngle);
+			ContextManager.moveAgent(agent, fact.createPoint(road.getSourceJunction().getCoords()));
 
-				double angle = distAndAngle[1];
+		} else {
 
-				Point setoffPoint = fact.createPoint(setoffCoordinate);
+			double dsum = 0.0d;
+			double d2 = distance;
 
-				ContextManager.moveAgent(agent, setoffPoint);
+			int i = 0;
+			boolean RUN = true;
+			while (RUN) {
+				
+				double currentSegmentLength = getOrthodromicLineLength(polylineParts.get(i));
+				
+				d2 = d2 - currentSegmentLength;
+				if (d2<=0) {
+					Coordinate setoffCoordinate = polylineParts.get(i).getCoordinateN(0);
+					Coordinate targetCoordinate = polylineParts.get(i).getCoordinateN(1);
 
-				ContextManager.moveAgentByVector(agent, d2 * (-1.0), angle);
+					if (DEBUG_MODE) {
 
+						double deltaX = targetCoordinate.x - setoffCoordinate.x;
+						double deltaY = targetCoordinate.y - setoffCoordinate.y;
+
+						double l = getOrthodromicDistance(setoffCoordinate, targetCoordinate);
+						double coeff = (l + d2) / l;
+						Coordinate cNew = new Coordinate(setoffCoordinate.x + coeff*deltaX, setoffCoordinate.y + coeff*deltaY);
+						ContextManager.moveAgent(agent, fact.createPoint(cNew));
+						RUN = false;
+
+					} else {
+
+
+						distance(setoffCoordinate,
+								targetCoordinate, distAndAngle);
+						Point setoffPoint = fact.createPoint(setoffCoordinate);
+						ContextManager.moveAgent(agent, setoffPoint);
+						double angle = distAndAngle[1];
+
+						ContextManager.moveAgentByVector(agent, (currentSegmentLength + d2), angle);
+
+					}
+
+					RUN=false;
+
+				}
+				i++;
 			}
-			break;
 		}
-
 	}
 
 
@@ -355,8 +430,32 @@ public class PolyLineMover {
 	 */
 	public double getOrthodromicDistance(Coordinate c1, Coordinate c2) {
 
-		return ContextManager.simpleDistance.distance(c1, c2);
+		if (DEBUG_MODE)
+			return c1.distance(c2);
+		else
+			return ContextManager.simpleDistance.distance(c1, c2);
 
+	}
+	
+	/**
+	 * returns the orthodromic 
+	 * @param line
+	 * @return
+	 */
+	public double getOrthodromicLineLength(Geometry line) {
+		Coordinate[] coords = line.getCoordinates();
+		ArrayList<Coordinate> cA = new ArrayList<Coordinate>(Arrays.asList(coords));
+		double l = 0.0d;
+
+		for (int i=0; i<cA.size()-1; i++) {
+			if (DEBUG_MODE) {
+				l = l + cA.get(i).distance(cA.get(i+1));
+			} else {
+				l = l + ContextManager.simpleDistance.distance(cA.get(i), cA.get(i+1));
+			}
+		}
+
+		return l;
 	}
 
 	/**
@@ -365,15 +464,57 @@ public class PolyLineMover {
 	 * @return
 	 */
 	public double getOrthodromicLineLength(LineString line) {
- 		Coordinate[] coords = line.getCoordinates();
+		Coordinate[] coords = line.getCoordinates();
 		ArrayList<Coordinate> cA = new ArrayList<Coordinate>(Arrays.asList(coords));
 		double l = 0.0d;
-		
+
 		for (int i=0; i<cA.size()-1; i++) {
-			l = l + ContextManager.simpleDistance.distance(cA.get(i), cA.get(i+1));
+			if (DEBUG_MODE) {
+				l = l + cA.get(i).distance(cA.get(i+1));
+			} else {
+				l = l + ContextManager.simpleDistance.distance(cA.get(i), cA.get(i+1));
+			}
 		}
-		
+
 		return l;
 	}
+	
+	/**
+	 * returns the orthodromic 
+	 * @param line
+	 * @return
+	 */
+	public double getOrthodromicLineLength(MultiLineString line) {
+		Coordinate[] coords = line.getCoordinates();
+		ArrayList<Coordinate> cA = new ArrayList<Coordinate>(Arrays.asList(coords));
+		double l = 0.0d;
+
+		for (int i=0; i<cA.size()-1; i++) {
+			if (DEBUG_MODE) {
+				l = l + cA.get(i).distance(cA.get(i+1));
+			} else {
+				l = l + ContextManager.simpleDistance.distance(cA.get(i), cA.get(i+1));
+			}
+		}
+
+		return l;
+	}
+
+	public void terminate(Coordinate destinationCoordinate) {
+		ContextManager.moveAgent(agent, fact.createPoint(destinationCoordinate));
+		logToPostgres();
+
+	}
+
+	public void logToPostgres() {
+		if (DEBUG_MODE) {
+			System.out.println(">> " + agent.getPosition());
+		} else {
+			if (ContextManager.isPostgreSQLLoggerOn()) {
+				ContextManager.getPostgresLogger().log(ContextManager.getCurrentTick(), agent);
+			}
+		}
+	}
+
 
 }

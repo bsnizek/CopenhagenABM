@@ -1,31 +1,45 @@
 package copenhagenabm.agent;
 
-import com.vividsolutions.jts.geom.Point;
+import repastcity3.environment.Junction;
+
+import copenhagenabm.environment.Road;
 
 public class OvershootData {
+	
+	private Junction targetJunction;
+	private double nextPosition;
 
-	private double d;
-	private Point endPoint;
-
-	public OvershootData(double d, Point endPoint) {
-		this.setOvershoot(d);
-		this.setPoint(endPoint);
+	public OvershootData(Road road, Junction targetJunction, double nextPosition) {
+		this.road = road;
+		this.targetJunction = targetJunction;
+		this.nextPosition = nextPosition;
 	}
 
-	public double getOvershoot() {
-		return d;
+	private Road road;
+	public Road getRoad() {
+		return road;
 	}
 
-	public void setOvershoot(double d) {
-		this.d = d;
+	public void setRoad(Road road) {
+		this.road = road;
 	}
 
-	public Point getPoint() {
-		return endPoint;
+	public Junction getTargetJunction() {
+		return targetJunction;
 	}
 
-	public void setPoint(Point endPoint) {
-		this.endPoint = endPoint;
+	public void setTargetJunction(Junction targetJunction) {
+		this.targetJunction = targetJunction;
 	}
+
+	public double getNextPosition() {
+		return nextPosition;
+	}
+
+	public void setNextPosition(double nextPosition) {
+		this.nextPosition = nextPosition;
+	}
+
+
 
 }

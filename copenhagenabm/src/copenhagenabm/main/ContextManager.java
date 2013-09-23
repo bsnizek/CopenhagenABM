@@ -124,7 +124,6 @@ import copenhagenabm.tools.SnapTool;
 
 public class ContextManager implements ContextBuilder<Object> {
 
-
 	private static CoordinateReferenceSystem crs = null;
 
 	public static SimpleDistance simpleDistance = null;
@@ -152,7 +151,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * An index <indexID, Road>
 	 * needed by the near selection routines
 	 */
-	private static final HashMap<Integer, Road> roadIndex = new HashMap<Integer, Road>();
+	public static HashMap<Integer, Road> roadIndex = new HashMap<Integer, Road>();
 
 	// TODO: throw this into the settings file
 	private static final String TARGET_EPSG = "EPSG:2197";
@@ -1751,7 +1750,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public void readProperties() throws FileNotFoundException, IOException {
+	public static void readProperties() throws FileNotFoundException, IOException {
 
 		File propFile = new File("./copenhagenabm.properties");
 		if (!propFile.exists()) {
@@ -2380,6 +2379,15 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public static int dumpAtEveryTick() {
 		return new Integer(getProperty("dumpAtEveryTick"));
+	}
+
+	public static void setAgentGeography(Geography<IAgent> agentGeography2) {
+		agentGeography = agentGeography2;
+		
+	}
+
+	public static int getDistanceSnap() {
+		return new Integer(ContextManager.getProperty(GlobalVars.distanceSnap));
 	}
 
 

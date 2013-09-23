@@ -169,8 +169,8 @@ public class Road implements FixedGeography  {
 		this.junctions.add(sourceJunction);
 		this.junctions.add(targetJunction);
 		
-		
-		
+		this.sourceJunction = sourceJunction;
+		this.targetJunction = targetJunction;
 		
 	}
 	
@@ -255,6 +255,12 @@ public class Road implements FixedGeography  {
 			} catch (NoIdentifierException e) {
 				e.printStackTrace();
 			}
+		}
+		
+		if (this.junctions.size()==0) {
+			this.sourceJunction = j;
+		} else {
+			this.targetJunction = j;
 		}
 		this.junctions.add(j);
 	}
@@ -362,6 +368,10 @@ public class Road implements FixedGeography  {
 	public void setTargetJunction(Junction targetJunction) {
 		this.targetJunction = targetJunction;
 	}
+	
+	public Junction getSourceJunction() {
+		return sourceJunction;
+	}
 
 	public int getLeft() {
 		return left;
@@ -441,5 +451,10 @@ public class Road implements FixedGeography  {
 
 	public void setE_but(int e_but) {
 		this.e_but = e_but;
+	}
+
+	public void setGeometry(LineString ls1) {
+		this.geometry = ls1;
+		
 	}
 }
