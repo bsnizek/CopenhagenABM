@@ -5,6 +5,7 @@ import org.hibernate.SessionFactory;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
+import copenhagenabm.agent.CPHAgent;
 import copenhagenabm.agent.IAgent;
 import copenhagenabm.orm.Dot;
 import copenhagenabm.orm.HibernateUtil;
@@ -21,12 +22,21 @@ public class PostgresLogger {
 		sf = HibernateUtil.getSessionFactory();
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
-		
+
 		System.out.println("PostgresSQLLogger instantiated ! ");
 	}
 
-	public void log(int tick, IAgent agent) {
-		Dot d = new Dot(tick, agent, agent.getPosition());
+	public void log(int currentTick, IAgent agent) {
+		Dot d = new Dot(currentTick, agent, agent.getPosition());
+		//session.beginTransaction();
+		session.save(d);
+
+	}
+
+
+	public void log(int currentTick, CPHAgent agent,
+			Coordinate destinationCoordinate) {
+		Dot d = new Dot(currentTick, agent,destinationCoordinate);
 		//session.beginTransaction();
 		session.save(d);
 
@@ -42,11 +52,12 @@ public class PostgresLogger {
 	 */
 	public void commit() {
 		session.getTransaction().commit();
-		
+
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
-		
+
 		System.out.println("commited");
 
 	}
+
 }
