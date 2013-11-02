@@ -21,7 +21,6 @@ along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
 package copenhagenabm.agent;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.geotools.referencing.GeodeticCalculator;
@@ -29,8 +28,6 @@ import org.geotools.referencing.GeodeticCalculator;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.Point;
 
 // import copenhagenabm.environment.NearestRoadCoordCache;
@@ -54,16 +51,13 @@ import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.space.gis.Geography;
 import repastcity3.environment.Building;
 import repastcity3.environment.Junction;
-import repastcity3.environment.NetworkEdge;
 import repastcity3.environment.SpatialIndexManager;
 import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.exceptions.RoutingException;
-import sun.tools.tree.ThisExpression;
 
 public class CPHAgent implements IAgent {
 
 	private int birthTick = 0;
-	public int DESTINATION_SNAP = 0;
 
 	RoadLoadLogger roadLoadLogger = ContextManager.getRoadLoadLogger();
 
@@ -74,6 +68,10 @@ public class CPHAgent implements IAgent {
 	 */
 	private boolean isCalibrationAgent = false;
 
+
+	public boolean isCalibrationAgent() {
+		return isCalibrationAgent;
+	}
 
 	public int getBirthTick() {
 		return birthTick;
@@ -132,7 +130,6 @@ public class CPHAgent implements IAgent {
 	// the agent starts walking from
 	// private Coordinate originPoint;
 
-	// TODO: no idea, think this is a remnant of repastcity
 	private Junction targetJunction;
 
 	double[] distAndAngle = new double[2];
@@ -211,11 +208,11 @@ public class CPHAgent implements IAgent {
 	public boolean isAtDestination() {
 
 		double distance = getOrthodromicDistance(this.getPosition(), this.getDestinationCoordinate());
-
-		if (distance < DESTINATION_SNAP) {
+		int snapDistance = ContextManager.getDistanceSnap();
+		if (distance < snapDistance) {
 			// System.out.println("Agent " + this.getID() + " on edge " + this.getRoute().getGPSID() + " is at destination");
 			ContextManager.resetNumberOfKills();
-
+			this.toBeKilled = true;
 			return true;
 		}
 		return false;
@@ -227,7 +224,7 @@ public class CPHAgent implements IAgent {
 	public boolean isMoreThan50PercentOverGPSRouteDistance() {
 		double matchedGPSRouteLength = this.matchedGPSRoute.getLengthInMetres();
 		double routeLength = this.getRoute().getLengthInMetres();
-		double moreThan50Percent = matchedGPSRouteLength * 2.0;
+		double moreThan50Percent = matchedGPSRouteLength * 1.5;
 		return (routeLength >= moreThan50Percent);
 	}
 
@@ -289,18 +286,13 @@ public class CPHAgent implements IAgent {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		try {
 			birthTick = ContextManager.getCurrentTick();
 		} catch (Exception e) {
 			birthTick = 0;
 		}
 
-		try {
-			DESTINATION_SNAP = ContextManager.getDistanceSnap();
-		} catch (Exception e) {
-			DESTINATION_SNAP = 30;
-		}
 	}
 
 	public Building getOriginBuilding() {
@@ -330,12 +322,7 @@ public class CPHAgent implements IAgent {
 			c = this.getSourceCoord();
 
 			ContextManager.moveAgent(this, fact.createPoint(c)); // move the agent to the projection on the road network*/
-			Road r = getRoadByCoordinate(c); // TODO : do the split here
-
-			// TODO: remove
-			if (r==null) {
-				r = getRoadByCoordinate(c);
-			}
+			Road r = getRoadByCoordinate(c);
 
 			setCurrentRoad(r);
 			// build the geometry from the point of entry to the end of the 
@@ -365,11 +352,11 @@ public class CPHAgent implements IAgent {
 	 * @param g 
 	 */
 	private void addToRoute(Road r, Geometry g) {
-		//		this.getRoute().addEdgeGeometry(r, g);
+		this.getRoute().addEdgeGeometry(r, g);
 	}
 
-	//	@Override
-	@SuppressWarnings("unchecked")
+	@Override
+	//	@SuppressWarnings("unchecked")
 	public void step() throws RoutingException {
 
 		boolean isKilled=false;
@@ -391,7 +378,6 @@ public class CPHAgent implements IAgent {
 				try {
 					roadLoadLogger.addEntry(cr.getIdentifier());
 				} catch (NoIdentifierException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -399,29 +385,63 @@ public class CPHAgent implements IAgent {
 			// build two dummy roads, one from current position to junction 1 one to 2 
 
 			ArrayList<Junction> junctions = cr.getJunctions();
-
+			
+			Junction junction1 = junctions.get(0);
+			Junction junction2 = junctions.get(1);
+			
+			double d1 = firstCoordinateOnRoad.distance(junction1.getCoords());
+			double d2 = firstCoordinateOnRoad.distance(junction2.getCoords());
 
 			Road r1 = new Road(cr, firstCoordinateOnRoad, junctions.get(0), "-1");
 			Road r2 = new Road(cr, firstCoordinateOnRoad, junctions.get(1), "-2");
 
 			ArrayList<Road> roads = new ArrayList<Road>();
-			roads.add(r1);
-			roads.add(r2);
 
-			EdgeSelector es = new EdgeSelector(roads, null, this);
+			// debug stuff - remove when it's working
+			if (r1.getGeometry() == null && r2.getGeometry() == null) {
+				r1 = new Road(cr, firstCoordinateOnRoad, junctions.get(0), "-1");
+				r2 = new Road(cr, firstCoordinateOnRoad, junctions.get(1), "-1");
+			}
+			
+			
+			Road newRoad;
 
-			//			es.getDecisionMatrix().printMatrix(); // TODO: add a switch from the config file here
+			if (r1.getGeometry() != null) {
+				roads.add(r1);
+			}
 
-			Road newRoad = es.getRoad();
+			if (r2.getGeometry() != null) {
+				roads.add(r2);
+				r2.getGeometry();
+			}
+			
+			if (((r1.getGeometry()==null) && (r2.getGeometry()==null))) {
+				System.out.println("BOTH r1 and r2 = null -> PROBLEM");
+			}
 
-			//			try {
-			//				ContextManager.getRoadLoadLogger().addEntry(newRoad.getIdentifier());
-			//			} catch (NoIdentifierException e) {
-			//				// TODO Auto-generated catch block
-			//				e.printStackTrace();
-			//			}
+			if (roads.size() == 1) {
+				newRoad = roads.get(0);
+			} else {
+				EdgeSelector es = new EdgeSelector(roads, null, this);
 
-			Point newTargetPoint = fact.createPoint(newRoad.getTargetJunction().getCoords());
+				if (ContextManager.isDecisionLoggerOn()) {
+
+					es.getDecisionMatrix().printMatrix();
+
+				}
+
+				newRoad = es.getRoad();
+			}
+			
+			if (newRoad==null) {
+				System.out.println("new Road = null");
+			}
+
+			Junction tJ = newRoad.getTargetJunction();
+			if (tJ == null) {
+				System.out.println("STOP");
+			}
+			Point newTargetPoint = fact.createPoint(tJ.getCoords());
 			Point crSourcePoint = fact.createPoint(cr.getEdge().getSource().getCoords());
 
 			double d = ContextManager.simpleDistance.distance(crSourcePoint, newTargetPoint);
@@ -453,15 +473,15 @@ public class CPHAgent implements IAgent {
 			double distance = speed * stepLength;
 
 			OvershootData overshoot = plm.move(distance);
-			
-			if (this.getOrthodromicDistance(this.getPosition(), destinationCoordinate)<DESTINATION_SNAP) {
+
+			if (this.getOrthodromicDistance(this.getPosition(), destinationCoordinate) < ContextManager.getDistanceSnap()) {
 				plm.terminate(destinationCoordinate);
 			}
-			
+
 			if (overshoot != null) {
 				this.plm = new PolyLineMover(this, overshoot.getRoad(), overshoot.getTargetJunction());
 			}
-			
+
 			//			System.out.println("DISTANCE " + distance);
 			//			System.out.println(this.getID() + " " + this.getPosition());
 			//			plm.move(distance);
@@ -491,7 +511,6 @@ public class CPHAgent implements IAgent {
 			try {
 				roadID = this.getCurrentRoad().getIdentifier();
 			} catch (NoIdentifierException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -500,7 +519,7 @@ public class CPHAgent implements IAgent {
 			history.add(m);
 		}
 
-//		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+		//		Integer currentTick = new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
 
 		//		ContextManager.getPostgresLogger().log(currentTick, this.age);
 
@@ -508,24 +527,27 @@ public class CPHAgent implements IAgent {
 			ContextManager.removeAgent(this);
 		}
 
+		if (this.isCalibrationAgent() && this.isMoreThan50PercentOverGPSRouteDistance()) {
+			this.setTerminated(true);
+		}
+
 
 	} // step()
 
-	private double getOrthodromicMulitLineString(MultiLineString geometry) {
-		double sum = 0.0;
-		int numGeometries = geometry.getNumGeometries();
-		for (int i=0; i<numGeometries; i++) {
-			LineString l = (LineString) geometry.getGeometryN(i);
-			sum = sum + getOrthodromicDistance(l.getStartPoint().getCoordinate(), l.getEndPoint().getCoordinate());
-		}
-		return sum;
-	}
+	//	private double getOrthodromicMulitLineString(MultiLineString geometry) {
+	//		double sum = 0.0;
+	//		int numGeometries = geometry.getNumGeometries();
+	//		for (int i=0; i<numGeometries; i++) {
+	//			LineString l = (LineString) geometry.getGeometryN(i);
+	//			sum = sum + getOrthodromicDistance(l.getStartPoint().getCoordinate(), l.getEndPoint().getCoordinate());
+	//		}
+	//		return sum;
+	//	}
 
 	public double getSpeed() {
 		if (ContextManager.getAgentSpeedMode() == AGENT_SPEED_MODES.STATIC) {
 			return ContextManager.getAgentSpeed();
 		} else {
-			// TODO #9
 			return 1.0;
 		}
 	}
@@ -578,7 +600,6 @@ public class CPHAgent implements IAgent {
 			try {
 				ahw.writeHistory(history);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -788,21 +809,33 @@ public class CPHAgent implements IAgent {
 
 	@Override
 	public void logBasics() {
+
+		Zone bZ = getBirthZone();
 		String bZID = null;
-		try {
-			bZID = getBirthZone().getIdentifier();
-		} catch (NoIdentifierException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		String dZID = null;
-		try {
-			dZID = getDestinationZone().getIdentifier();
-		} catch (NoIdentifierException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		if (bZ == null) {
+			bZID = "null";
+			dZID = "null";
+		} else {
+
+			try {
+				bZID = getBirthZone().getIdentifier();
+			} catch (NoIdentifierException e) {
+				e.printStackTrace();
+			}
+
+			try {
+				dZID = getDestinationZone().getIdentifier();
+			} catch (NoIdentifierException e) {
+				e.printStackTrace();
+			}
 		}
 		this.getBasicAgentLogger().doLog(this.getID(), this.getBirthTick(), ContextManager.getCurrentTick(), bZID, dZID, this.getSourceCoord(), this.getDestinationCoordinate());
+	}
+
+	public void setToBeKilled(boolean toBeKilled) {
+		this.toBeKilled = toBeKilled;
 	}
 
 }

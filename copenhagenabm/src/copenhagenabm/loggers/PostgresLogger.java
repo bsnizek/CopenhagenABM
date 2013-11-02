@@ -56,7 +56,7 @@ public class PostgresLogger {
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
 
-		System.out.println("commited");
+//		System.out.println("commited");
 
 	}
 

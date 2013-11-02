@@ -102,4 +102,6 @@ public interface IAgent {
 	public void snapAgentToRoad();
 
 	void logBasics();
+	
+	public boolean isCalibrationAgent();
 }

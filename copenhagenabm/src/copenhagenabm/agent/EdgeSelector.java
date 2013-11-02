@@ -31,11 +31,19 @@ public class EdgeSelector {
 
 	public EdgeSelector(List<Road> roads, Road currentRoad, CPHAgent agent) {
 
+		if (roads.size() == 0) {
+			System.out.println("xxx");
+		}
+		
 		this.agent = agent;
 
 		decisionMatrix = new DecisionMatrix(agent.getID());
 
 		ArrayList<Road> newRoads = new ArrayList<Road>();
+		
+		if (roads.size() == 0) {
+			System.out.println("roads=null");
+		}
 
 		//		this.simpleLoadLogger = ContextManager.getSimpleLoadLogger();
 
@@ -201,24 +209,21 @@ public class EdgeSelector {
 				Decision d = new Decision(this.agent.getID(), this.agent.getPosition(), r.getIdentifier());
 				ContextManager.getDecisionContext().add(d);
 			} catch (NoIdentifierException e) {
-				// TODO Auto-generated catch block
+				
 				e.printStackTrace();
 			}
 		}
 
-
-		//		if (!ContextManager.inCalibrationMode()) {
-		//
-		//			try {
-		//				simpleLoadLogger.addVisitedToRoad(r.getIdentifier(), ContextManager.getGroupingFactor());
-		//			} catch (NoIdentifierException e) {
-		//				// TODO Auto-generated catch block
-		//				e.printStackTrace();
-		//			}
-		//		}
+		
+		if (r == null) {
+			System.out.println("NULL");
+			r =  (Road) decisionMatrix.rollDice();
+		}
 
 		this.agent.setCurrentRoad(r);
 
+
+		
 		return r;
 
 	}

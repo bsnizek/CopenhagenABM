@@ -23,13 +23,15 @@ public class MatchedGPSRoute implements FixedGeography {
 	private static final String TARGET_EPSG = "EPSG:2197";
 
 	private static GeometryFactory fact = new GeometryFactory();
+	
+	private SnapTool snapTool;
 
 	private Coordinate coord;
 	private int OBJECTID;
 
 	private ArrayList<Geometry> edgeList = new ArrayList<Geometry>();
 
-	private SnapTool snapTool;
+	
 
 	public MatchedGPSRoute() {
 		snapTool = ContextManager.getCopenhagenABMTools().getSnapTool();

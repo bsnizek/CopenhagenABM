@@ -1,4 +1,7 @@
 /*
+ * 
+ * 
+©Copyright 2013 Bernhard Snizek
 ©Copyright 2012 Nick Malleson
 This file is part of RepastCity.
 
@@ -20,7 +23,7 @@ package copenhagenabm.environment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+
 import java.util.Map;
 
 import com.vividsolutions.jts.geom.Coordinate;
@@ -29,7 +32,7 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.main.ContextManager;
-import copenhagenabm.main.GlobalVars;
+//import copenhagenabm.main.GlobalVars;
 import copenhagenabm.tools.ChopLineStringTool;
 
 import repast.simphony.space.gis.Geography;
@@ -70,9 +73,9 @@ public class Road implements FixedGeography  {
 	// The NetworkEdge which represents this Road in the roadNetwork
 	transient private NetworkEdge<Junction> edge;
 
-	// These determine whether or not the the road can be traversed on foot and/or by car.
-	private String access; // To be used by ShapefileLoader, should contain string of words separated by spaces
-	private List<String> accessibility; // access String should be parsed into this list (see initialise()).
+//	// These determine whether or not the the road can be traversed on foot and/or by car.
+//	private String access; // To be used by ShapefileLoader, should contain string of words separated by spaces
+//	private List<String> accessibility; // access String should be parsed into this list (see initialise()).
 
 	private String name; // Doesn't affect model but useful for debugging
 
@@ -116,12 +119,23 @@ public class Road implements FixedGeography  {
 	
 	Geography<Road> roadProjection = ContextManager.roadProjection;
 	
-	private ArrayList<LineString> polylineParts  = new ArrayList<LineString>();
+//	private ArrayList<LineString> polylineParts  = new ArrayList<LineString>();
 
 	private Road parentRoad;
 
 	private ChopLineStringTool chopLineStringTool;
+
+	// if begin node == end node we set geometry to zero
+	private boolean zeroGeometry = false;
 	
+	public boolean isZeroGeometry() {
+		return zeroGeometry;
+	}
+
+	public void setZeroGeometry(boolean zeroGeometry) {
+		this.zeroGeometry = zeroGeometry;
+	}
+
 	public Road() {
 		this.junctions = new ArrayList<Junction>();
 	}
@@ -132,7 +146,6 @@ public class Road implements FixedGeography  {
 	 * We use this for agent spawning
 	 * 
 	 */
-	@SuppressWarnings("unchecked")
 	public Road(Road cr, Coordinate firstCoordinateOnRoad, Junction targetJunction, String ID) {
 		
 		this.chopLineStringTool = new ChopLineStringTool(cr.getGeometry());
@@ -158,7 +171,7 @@ public class Road implements FixedGeography  {
 		sourceJunction = new Junction();
 		sourceJunction.setCoords(firstCoordinateOnRoad);
 		
-		this.edge = new NetworkEdge(sourceJunction, targetJunction, majorRoad, goodbad);
+		this.edge = new NetworkEdge<Junction>(sourceJunction, targetJunction, majorRoad, goodbad);
 		
 		this.setTargetJunction(targetJunction);
 		
@@ -166,11 +179,15 @@ public class Road implements FixedGeography  {
 		
 		buildGeometry();
 		
+		if (sourceJunction.getCoords().equals(targetJunction.getCoords())) {
+			this.zeroGeometry  = true;
+		} else {
+		
 		this.junctions.add(sourceJunction);
 		this.junctions.add(targetJunction);
-		
-		this.sourceJunction = sourceJunction;
-		this.targetJunction = targetJunction;
+		}
+//		this.sourceJunction = sourceJunction;
+//		this.targetJunction = targetJunction;
 		
 	}
 	
@@ -337,7 +354,11 @@ public class Road implements FixedGeography  {
 	 */
 	@Override
 	public int hashCode() {
-		return this.identifier.hashCode();
+		String in = this.identifier;
+		if (in==null) {
+			System.out.println("Field Identifier is missing on the road theme");
+		}
+		return in.hashCode();
 	}
 	
 	public double getLength() {

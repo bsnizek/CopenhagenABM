@@ -3,12 +3,12 @@ package copenhagenabm.tools;
 import gnu.trove.TIntProcedure;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Properties;
+//import java.util.HashMap;
+//import java.util.Properties;
 
 import repastcity3.environment.SpatialIndexManager;
 
-import com.infomatiq.jsi.SpatialIndex;
+//import com.infomatiq.jsi.SpatialIndex;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
@@ -33,16 +33,16 @@ public class SnapTool {
 		}
 	}
 
-	private String minNodeEntries;
-	private String maxNodeEntries;
+//	private String minNodeEntries;
+//	private String maxNodeEntries;
 
 
 	/**
 	 * Constructor - gets the min and max settings for the nodes found in the near search from the property file 
 	 */
 	public SnapTool() {
-		minNodeEntries = ContextManager.getProperty("MinNodeEntries");
-		maxNodeEntries = ContextManager.getProperty("MaxNodeEntries");
+//		minNodeEntries = ContextManager.getProperty("MinNodeEntries");
+//		maxNodeEntries = ContextManager.getProperty("MaxNodeEntries");
 	}
 
 	/*
@@ -110,7 +110,6 @@ public class SnapTool {
 		Coordinate resultcoord = null;
 
 		for (Coordinate cc : ppd.getCoordinates()) { 
-			// System.out.println(cc); 
 			if (cc.equals(c) == false) {
 				resultcoord = cc;
 			}

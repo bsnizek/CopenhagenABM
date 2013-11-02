@@ -39,7 +39,6 @@ public class CopenhagenABMTools {
 
 		long bottom = b / tickSize;
 		long top = t / tickSize; 
-		// System.out.println(bottom + " " + top);
 		return new Random().nextInt((int) (top-bottom)) + bottom;
 	}
 

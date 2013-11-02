@@ -91,7 +91,6 @@ public class ShapefileWriter {
     for (Object obj : layer.getAgentSet()) {
       fac.getFeature(obj, geography);
       if (cntr1 == 1000) {
-    	  System.out.println("" + fac + " " + cntr); 
     	  cntr1 = 0;
       }
       cntr++;

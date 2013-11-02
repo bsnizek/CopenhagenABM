@@ -182,7 +182,7 @@ public class Route implements FixedGeography {
 
 			if (isFirstForward) {	// let us add all the coordinates
 				/*for (int k=0; k < firstSegCoords.length; k++) {
-				//System.out.println(k + "/t" + coords.size());
+				// System.out.println(k + "/t" + coords.size());
 				coords.add(firstSegCoords[k]);
 			}*/
 				coords.addAll(Arrays.asList(firstSegCoords));
@@ -334,7 +334,7 @@ public class Route implements FixedGeography {
 			ps += r.getGeometry().getLength() / (double) ne;	// add length of this edge, divided by number of uses
 		}
 		pathSizeAttr  = ps / getLength();	// store in class variable
-		//System.out.println("\n" + getLength() + " ps: " + ps);
+		// System.out.println("\n" + getLength() + " ps: " + ps);
 		return pathSizeAttr;
 	}
 

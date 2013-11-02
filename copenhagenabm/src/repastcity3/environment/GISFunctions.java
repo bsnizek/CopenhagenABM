@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package repastcity3.environment;
 
@@ -31,14 +31,15 @@ import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.environment.FixedGeography;
 import copenhagenabm.environment.Road;
+import copenhagenabm.main.ContextManager;
 
 import repast.simphony.context.Context;
 import repast.simphony.space.gis.Geography;
 import repast.simphony.space.gis.ShapefileLoader;
 import repast.simphony.space.graph.Network;
+import repastcity3.exceptions.NoIdentifierException;
 
 /**
- * Class with useful GIS functions for configuring the GIS model environment.
  * 
  * @author Nick Malleson
  * 
@@ -70,68 +71,90 @@ public class GISFunctions {
 
 		// Iterate through all roads
 		Iterable<Road> roadIt = roadGeography.getAllObjects();
+	
+		int errorCounter = 0;
+	
 		for (Road road : roadIt) {
 			// Create a LineString from the road so we can extract coordinates
+
 			Geometry roadGeom = roadGeography.getGeometry(road);
 			Coordinate c1 = roadGeom.getCoordinates()[0]; // First coord
 			Coordinate c2 = roadGeom.getCoordinates()[roadGeom.getNumPoints() - 1]; // Last coord
 
-			// Create Junctions from these coordinates and add them to the JunctionGeography (if they haven't been
-			// created already)
-			Junction junc1, junc2;
-			if (coordMap.containsKey(c1)) {
-				// A Junction with those coordinates (c1) has been created, get it so we can add an edge to it
-				junc1 = coordMap.get(c1);
-			} else { // Junction does not exit
-				junc1 = new Junction();
-				junc1.setCoords(c1);
-				junctionContext.add(junc1);
-				coordMap.put(c1, junc1);
-				Point p1 = geomFac.createPoint(c1);
-				junctionGeography.move(junc1, p1);
-			}
-			if (coordMap.containsKey(c2)) {
-				junc2 = coordMap.get(c2);
-			} else { // Junction does not exit
-				junc2 = new Junction();
-				junc2.setCoords(c2);
-				junctionContext.add(junc2);
-				coordMap.put(c2, junc2);
-				Point p2 = geomFac.createPoint(c2);
-				junctionGeography.move(junc2, p2);
-			}
-			// Tell the road object who it's junctions are
-			road.addJunction(junc1);
-			road.addJunction(junc2);
-			// Tell the junctions about this road
-			junc1.addRoad(road);
-			junc2.addRoad(road);
+			if (c1.equals(c2)) {
+				
+				try {
+					System.out.println("Road ID=" + road.getIdentifier() + " has c1==c2!");
+					errorCounter++;
+				} catch (NoIdentifierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				ContextManager.getRoadContext().remove(road);
+				ContextManager.roadIndex.remove(road);
 
-			// Create an edge between the two junctions, assigning a weight equal to it's length
-			NetworkEdge<Junction> edge = new NetworkEdge<Junction>(junc1, junc2, false, roadGeom.getLength());
-			// Set whether or not the edge represents a major road (gives extra benefit to car drivers).
-//			if (road.isMajorRoad())
-//				edge.setMajorRoad(true);
-			// // Store the road's TOID in a dictionary (one with edges as keys, one with id's as keys)
-			// try {
-			// // edgeIDs_KeyEdge.put(edge, (String) road.getIdentifier());
-			// // edgeIDs_KeyID.put((String) road.getIdentifier(), edge);
-			// edges_roads.put(edge, road);
-			// roads_edges.put(road, edge);
-			// } catch (Exception e) {
-			// Outputter.errorln("EnvironmentFactory: buildGISRoadNetwork error, here's the message:\n"+e.getMessage());
-			// }
-			// Tell the Road and the Edge about each other
-			road.setEdge(edge);
-			edge.setRoad(road);
-			if (!roadNetwork.containsEdge(edge)) {
-				roadNetwork.addEdge(edge);
 			} else {
-//				LOGGER.severe("CityContext: buildRoadNetwork: for some reason this edge that has just been created "
-//						+ "already exists in the RoadNetwork!");
-			}
 
-		} // for road:
+				// Create Junctions from these coordinates and add them to the JunctionGeography (if they haven't been
+				// created already)
+				Junction junc1, junc2;
+				if (coordMap.containsKey(c1)) {
+					// A Junction with those coordinates (c1) has been created, get it so we can add an edge to it
+					junc1 = coordMap.get(c1);
+				} else { // Junction does not exit
+					junc1 = new Junction();
+					junc1.setCoords(c1);
+					junctionContext.add(junc1);
+					coordMap.put(c1, junc1);
+					Point p1 = geomFac.createPoint(c1);
+					junctionGeography.move(junc1, p1);
+				}
+				if (coordMap.containsKey(c2)) {
+					junc2 = coordMap.get(c2);
+				} else { // Junction does not exit
+					junc2 = new Junction();
+					junc2.setCoords(c2);
+					junctionContext.add(junc2);
+					coordMap.put(c2, junc2);
+					Point p2 = geomFac.createPoint(c2);
+					junctionGeography.move(junc2, p2);
+				}
+				// Tell the road object who it's junctions are
+				road.addJunction(junc1);
+				road.addJunction(junc2);
+				// Tell the junctions about this road
+				junc1.addRoad(road);
+				junc2.addRoad(road);
+
+				// Create an edge between the two junctions, assigning a weight equal to it's length
+				NetworkEdge<Junction> edge = new NetworkEdge<Junction>(junc1, junc2, false, roadGeom.getLength());
+				// Set whether or not the edge represents a major road (gives extra benefit to car drivers).
+				//			if (road.isMajorRoad())
+				//				edge.setMajorRoad(true);
+				// // Store the road's TOID in a dictionary (one with edges as keys, one with id's as keys)
+				// try {
+				// // edgeIDs_KeyEdge.put(edge, (String) road.getIdentifier());
+				// // edgeIDs_KeyID.put((String) road.getIdentifier(), edge);
+				// edges_roads.put(edge, road);
+				// roads_edges.put(road, edge);
+				// } catch (Exception e) {
+				// Outputter.errorln("EnvironmentFactory: buildGISRoadNetwork error, here's the message:\n"+e.getMessage());
+				// }
+				// Tell the Road and the Edge about each other
+				road.setEdge(edge);
+				edge.setRoad(road);
+				if (!roadNetwork.containsEdge(edge)) {
+					roadNetwork.addEdge(edge);
+				} else {
+					//				LOGGER.severe("CityContext: buildRoadNetwork: for some reason this edge that has just been created "
+					//						+ "already exists in the RoadNetwork!");
+				}
+
+			} // for road:
+		}
+		System.out.println(errorCounter + " invalid roads of " + roadIt);
+		System.out.println("=======================================");
 	}
 
 	/**
@@ -198,7 +221,7 @@ public class GISFunctions {
 	 */
 	public static <T> void readAgentShapefile(Class<T> cl, String shapefileLocation, Geography<T> geog,
 			Context<T> context) throws MalformedURLException, FileNotFoundException {
-		
+
 		File shapefile = null;
 		ShapefileLoader<T> loader = null;
 		shapefile = new File(shapefileLocation);

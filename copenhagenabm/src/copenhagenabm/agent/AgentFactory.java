@@ -42,7 +42,7 @@ public class AgentFactory {
 		// System.out.print("+ " + a);
 		
 		if (a==null) {
-			System.out.println("null");
+			System.out.println("agent=null (AgentFactory 45");
 		}
 		
 		ContextManager.agentsToBeSpawned.add(a);
@@ -67,6 +67,9 @@ public class AgentFactory {
 		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute); // Create a new agent
 		ContextManager.addAgentToContext(a);  // add it to the context
 		a.snapAgentToRoad();
+		
+		System.out.println("(" + ContextManager.getCurrentTick() + ") Calibration agent ID=" + a.getID() + " @ routeID=" + matchedGPSRoute.getOBJECTID());
+		
 		return a;
 	}
 
