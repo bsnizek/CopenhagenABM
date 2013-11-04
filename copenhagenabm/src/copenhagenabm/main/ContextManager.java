@@ -664,15 +664,20 @@ public class ContextManager implements ContextBuilder<Object> {
 			e.printStackTrace();
 		}
 
-		// then we build the spatial index for the roads
-		buildSpatialIndexRoad();
 
-		// build the junctions
-		buildJunctionGeography();
 
 		setCrs(ContextManager.roadProjection.getCRS());
 
 		simpleDistance = new SimpleDistance(getCrs(), TARGET_EPSG);
+		
+		// build the junctions
+		buildJunctionGeography();
+		
+		// build the roads
+		buildRoadNetwork();
+		
+		buildSpatialIndexRoad();
+		
 
 		if (inCalibrationMode()) {
 
@@ -708,8 +713,6 @@ public class ContextManager implements ContextBuilder<Object> {
 		//			}
 
 		try {
-
-			buildRoadNetwork();
 			
 			// Create the buildings - context and geography projection
 			buildingContext = new BuildingContext();
@@ -867,9 +870,9 @@ public class ContextManager implements ContextBuilder<Object> {
 		// then we build the spatial index for the roads
 		//		buildSpatialIndexRoad();
 		// build the junctions
-		buildJunctionGeography();
+
 		// TODO: this here throws errors (Road: Error: this Road object already has two Junctions.)
-		buildRoadNetwork();
+//		buildRoadNetwork();
 
 		try {
 			loadMatchedGPSRoutes(gisDataDir);
@@ -1094,17 +1097,31 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
 
+		ArrayList<String> zonesNotFound = new ArrayList<String>();
+		
 		for (MatrixReader.Spawn spawn: this.spawns) {
 			schedule.schedule(ScheduleParameters.createOneTime(spawn.getSpawnAtTick(), 
 					ScheduleParameters.LAST_PRIORITY, 1), this, 
 					"spawnAgent", spawn.getZoneFrom(), spawn.getZoneTo());
 
+			if (ContextManager.getZoneByID(spawn.getZoneFrom())==null) {
+				if (!zonesNotFound.contains(spawn.getZoneFrom())) {
+					zonesNotFound.add(spawn.getZoneFrom());
+				}
+				
+			}
+			
 			spawnCounter++;
 
 		}
+		
 
+		for (String s : zonesNotFound) {
+			System.out.println("NOT IN .shp: " + s);
+		}
+		
 		System.out.println(spawnCounter + " SPAWNS" );
-
+		
 	}
 
 	public void spawnAgent(String zFrom, String zTo) {

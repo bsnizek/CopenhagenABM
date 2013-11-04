@@ -27,7 +27,7 @@ public class ChopLineStringTool {
 
 		if (chopCoord.equals(endCoord)) {
 			
-			System.out.println("endCoord = chopCoord");
+//			System.out.println("endCoord = chopCoord");
 			
 			return null;
 		}

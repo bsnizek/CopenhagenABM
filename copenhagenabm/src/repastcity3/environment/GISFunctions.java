@@ -153,7 +153,8 @@ public class GISFunctions {
 
 			} // for road:
 		}
-		System.out.println(errorCounter + " invalid roads of " + roadIt);
+		
+		System.out.println(errorCounter + " invalid roads of " + roadGeography.size());
 		System.out.println("=======================================");
 	}
 

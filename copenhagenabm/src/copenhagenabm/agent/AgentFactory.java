@@ -8,8 +8,8 @@ import copenhagenabm.main.ContextManager;
 import copenhagenabm.routes.MatchedGPSRoute;
 
 public class AgentFactory {
-	
-	
+
+
 	/*
 	 * createAgent gives birth to an agent
 	 * 
@@ -18,14 +18,14 @@ public class AgentFactory {
 
 		// 0. Increment the agent ID
 		ContextManager.incrementAgentCounter();
-//		this.agentID = ContextManager.getAgentCounter();
+		//		this.agentID = ContextManager.getAgentCounter();
 
 		// 1. get the zone of origin
 		Zone zoneFrom = ContextManager.getZoneByID(zoneFromID);
 
 		// 2. get a random Person 
 		Person person=null;
-		
+
 		if (zoneFrom == null) {
 			System.out.println("zoneFrom = null");
 		}
@@ -37,16 +37,20 @@ public class AgentFactory {
 		}
 
 		// 3. build the agent
-		CPHAgent a = new CPHAgent(person.getBuilding(), ContextManager.getZoneByID(zoneToID)); // Create a new agent
-		
+		CPHAgent a=null;
+		try {
+			a = new CPHAgent(person.getBuilding(), ContextManager.getZoneByID(zoneToID)); // Create a new agent
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		// System.out.print("+ " + a);
-		
+
 		if (a==null) {
 			System.out.println("agent=null (AgentFactory 45");
 		}
-		
+
 		ContextManager.agentsToBeSpawned.add(a);
-		
+
 		//ContextManager.addAgentToContext(a); // Add the agent to the context
 
 		// 4. get the projection of the current coordinate onto 
@@ -63,13 +67,13 @@ public class AgentFactory {
 	 */
 	public CPHAgent createAgent(Coordinate from, Coordinate to, int sourceRouteID, MatchedGPSRoute matchedGPSRoute) {
 		ContextManager.incrementAgentCounter();
-		
+
 		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute); // Create a new agent
 		ContextManager.addAgentToContext(a);  // add it to the context
 		a.snapAgentToRoad();
-		
+
 		System.out.println("(" + ContextManager.getCurrentTick() + ") Calibration agent ID=" + a.getID() + " @ routeID=" + matchedGPSRoute.getOBJECTID());
-		
+
 		return a;
 	}
 
