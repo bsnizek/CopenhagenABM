@@ -1,6 +1,10 @@
 package copenhagenabm.agent;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Point;
+
 import repastcity3.environment.Junction;
+import repastcity3.exceptions.NoIdentifierException;
 
 import copenhagenabm.environment.Road;
 
@@ -38,6 +42,20 @@ public class OvershootData {
 
 	public void setNextPosition(double nextPosition) {
 		this.nextPosition = nextPosition;
+	}
+	
+	public String toString() {
+		String rID = "";
+		try {
+			rID = getRoad().getIdentifier();
+		} catch (NoIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		Coordinate tJp = this.getTargetJunction().getPoint().getCoordinate();
+		
+		return this.getNextPosition() + " R(" + rID + ") + TJ(" + tJp.x + "/" + tJp.y + ")";
 	}
 
 

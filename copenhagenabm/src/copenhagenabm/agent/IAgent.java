@@ -46,7 +46,7 @@ public interface IAgent {
 	 * Controls the agent. This method will be called by the scheduler once per
 	 * iteration.
 	 */
-	 void step() throws Exception;
+	 void step() ;
 
 	/**
 	 * Used by Agents as a means of stating whether or not they can be
@@ -85,7 +85,7 @@ public interface IAgent {
 
 	public boolean isAtDestination();
 	
-	public boolean isTerminated();
+//	public boolean isTerminated();
 	
 	public void setTerminated(boolean b);
 

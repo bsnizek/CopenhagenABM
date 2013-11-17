@@ -82,10 +82,10 @@ public class GISFunctions {
 			Coordinate c2 = roadGeom.getCoordinates()[roadGeom.getNumPoints() - 1]; // Last coord
 
 			if (c1.equals(c2)) {
-				
+				errorCounter++;
 				try {
 					System.out.println("Road ID=" + road.getIdentifier() + " has c1==c2!");
-					errorCounter++;
+					
 				} catch (NoIdentifierException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

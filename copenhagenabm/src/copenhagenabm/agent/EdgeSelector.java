@@ -1,6 +1,7 @@
 package copenhagenabm.agent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import copenhagenabm.environment.Road;
@@ -22,50 +23,125 @@ public class EdgeSelector {
 
 	private CPHAgent agent;
 
+	public CPHAgent getAgent() {
+		return agent;
+	}
+
+
+	public void setAgent(CPHAgent agent) {
+		this.agent = agent;
+	}
+
+	private String originalRoadIDS = "Original Road IDs ";
+
 	//	private SimpleLoadLogger simpleLoadLogger;
 
 	public DecisionMatrix getDecisionMatrix() {
 		return decisionMatrix;
 	}
 
+	private String originRoadID;
+
 
 	public EdgeSelector(List<Road> roads, Road currentRoad, CPHAgent agent) {
+
+		if (currentRoad==null) {
+			originRoadID = "<entry>";
+		} else {
+
+			try {
+				originRoadID = currentRoad.getIdentifier();
+			} catch (NoIdentifierException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		for (Road r : roads) {
+			try {
+				this.originalRoadIDS = originalRoadIDS + " " + r.getIdentifier();
+			} catch (NoIdentifierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 		if (roads.size() == 0) {
 			System.out.println("xxx");
 		}
-		
+
 		this.agent = agent;
 
 		decisionMatrix = new DecisionMatrix(agent.getID());
 
 		ArrayList<Road> newRoads = new ArrayList<Road>();
-		
+
 		if (roads.size() == 0) {
 			System.out.println("roads=null");
 		}
 
 		//		this.simpleLoadLogger = ContextManager.getSimpleLoadLogger();
 
-		for (Road r : roads) {
-			if (roads.size()>1) {
-				try {
+		String dMRoadIDS = "(" + ContextManager.getCurrentTick() + ") A(" + this.getAgent().getID() + ") = ";
 
-					if (currentRoad==null) {
+		for (Road r : roads) {
+			try {
+				dMRoadIDS = dMRoadIDS + r.getIdentifier() + " ";
+			} catch (NoIdentifierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		System.out.println(dMRoadIDS);
+
+		for (Road r : roads) {
+
+			if (roads.size() > 1) {
+				String rID = null;
+				try {
+					rID = r.getIdentifier();
+				} catch (NoIdentifierException e) {
+					e.printStackTrace();
+				}
+
+				int occurrences = Collections.frequency(this.agent.getRoadHistory(), rID);
+
+				if (occurrences>3) {
+					// do not add the road, we have already been there 3 times
+					System.out.println("Road with ID=" + rID +" has already " + occurrences + " - skipping;");
+				} else {
+
+					if (currentRoad == null) {
 						newRoads.add(r);
 					}
 					else {
-						if (GlobalVars.SCORING_PARAMS.EXCEPT_U_TURN && (r.getIdentifier()==currentRoad.getIdentifier())) {
+
+						String crID = null;
+
+						try {
+							crID = currentRoad.getIdentifier();
+						} catch (NoIdentifierException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+						if (GlobalVars.SCORING_PARAMS.EXCEPT_U_TURN && (rID == crID)) {
+							System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + this.getAgent().getID() + ") Road ID=" + rID + " not added (U-turn).");
 
 						} else {
 							newRoads.add(r);
 						}
 					}
-				} catch (NoIdentifierException e) {
-					e.printStackTrace();
 				}
+
 			} else {newRoads.add(r);}
 		} 
+
+		if (newRoads.size()==0) {
+			System.out.println("No edges left, adding only ingoing edge");
+			newRoads.add(currentRoad); 
+		}
 
 		for (Road r : newRoads) {
 			decisionMatrix.addOption(r);
@@ -201,6 +277,8 @@ public class EdgeSelector {
 
 	public Road getRoad() {
 
+		this.agent.addRoadToRoadHistory();
+
 		Road r =  (Road) decisionMatrix.rollDice();
 
 		if (ContextManager.isDecisionLoggerOn()) {
@@ -209,21 +287,37 @@ public class EdgeSelector {
 				Decision d = new Decision(this.agent.getID(), this.agent.getPosition(), r.getIdentifier());
 				ContextManager.getDecisionContext().add(d);
 			} catch (NoIdentifierException e) {
-				
+
 				e.printStackTrace();
 			}
 		}
 
-		
+
 		if (r == null) {
-			System.out.println("NULL");
+			System.out.println("EdgeSelector.getRoad() : rollDice() returned null");
 			r =  (Road) decisionMatrix.rollDice();
+			System.out.println("rollDice() second attempt returned "+ r);
+		}
+
+		if (r==null) {
+			System.out.println("EdgeSelector returns null. " + this.originalRoadIDS);
+			r =  (Road) decisionMatrix.rollDice();
+			System.out.println("");
 		}
 
 		this.agent.setCurrentRoad(r);
 
+		String newRoadID=null;
 
-		
+		try {
+			newRoadID = r.getIdentifier();
+		} catch (NoIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + this.getAgent().getID() + ") EdgeSelector: " + this.originRoadID + " -> " +  newRoadID);
+
 		return r;
 
 	}

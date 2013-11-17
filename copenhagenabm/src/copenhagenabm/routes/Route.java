@@ -49,7 +49,7 @@ public class Route implements FixedGeography {
 	private double pathSizeAttr = 0.0d;
 
 	private boolean bestRoute = false;
-	
+
 	public CoordinateReferenceSystem getCRS() {
 		return ContextManager.getCrs();
 	}
@@ -121,19 +121,37 @@ public class Route implements FixedGeography {
 		}
 		return a;
 	}
-	
+
 	public double getLengthInMetres() {
-		
+
 		SimpleDistance sd = new SimpleDistance(this.getCRS(), TARGET_EPSG);
-		
+
 		return sd.geometryLengthInMetres(this.getGeometry());
-		
+
 	}
 
 	public LineString getRouteAsLineString() {
 
-		ArrayList<LineString> edges = getRouteAsLineStringList();
-
+		
+		// This is an evil hack but now way around. getR...List sometimes does rerturn null
+		
+		ArrayList<LineString> edges = null;
+		
+		int loopCounter = 0;
+		while (edges == null) {
+			edges = getRouteAsLineStringList();
+			loopCounter++;
+			if (loopCounter == 5) {
+				try {
+					throw new RouteAsLineStringListError();
+				} catch (RouteAsLineStringListError e) {
+					e.printStackTrace();
+				}
+				break;
+			}
+		}
+		
+		
 		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 
 		if (edges.size()>1) {
@@ -243,13 +261,20 @@ public class Route implements FixedGeography {
 			}
 			return fact.createLineString(cc);
 		} else {
+			
+			if (edges.size()==0) {
+				edges = getRouteAsLineStringList();
+			}
+			
 			return edges.get(0);
 		}
 	}
 
 
+
 	public double getLength() {
-		return this.getRouteAsLineString().getLength();
+		LineString ras = this.getRouteAsLineString();
+		return ras.getLength();
 	}
 
 	/**
@@ -421,20 +446,20 @@ public class Route implements FixedGeography {
 		return false;
 	}
 
-	
+
 	/**
 	 * removes last rode and edge
 	 */
 	public void removeLastRoad() {
-//		try {
-//			System.out.println("Removing edge with ID=" + this.roadList.get(this.roadList.size()-1).getIdentifier());
-//		} catch (NoIdentifierException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		//		try {
+		//			System.out.println("Removing edge with ID=" + this.roadList.get(this.roadList.size()-1).getIdentifier());
+		//		} catch (NoIdentifierException e) {
+		//			// TODO Auto-generated catch block
+		//			e.printStackTrace();
+		//		}
 		this.roadList.remove(this.roadList.size()-1);
 		this.edgeList.remove(this.edgeList.size()-1);
-		
+
 	}
 
 }

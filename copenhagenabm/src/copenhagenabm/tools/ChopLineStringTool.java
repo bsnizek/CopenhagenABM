@@ -165,7 +165,7 @@ public class ChopLineStringTool {
 
 			if (c10.equals(endCoord)) {
 
-//				System.out.println("c10");
+				System.out.println("c10");
 
 				for (int i= polylineParts.size(); i > segmentIDOfChop; i--) {
 					//					LineString pp = polylineParts.get(i);

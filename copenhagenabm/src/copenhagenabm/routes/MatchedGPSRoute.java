@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import repastcity3.exceptions.NoIdentifierException;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
@@ -29,9 +31,7 @@ public class MatchedGPSRoute implements FixedGeography {
 	private Coordinate coord;
 	private int OBJECTID;
 
-	private ArrayList<Geometry> edgeList = new ArrayList<Geometry>();
-
-	
+//	private ArrayList<Geometry> edgeList = new ArrayList<Geometry>();
 
 	public MatchedGPSRoute() {
 		snapTool = ContextManager.getCopenhagenABMTools().getSnapTool();
@@ -79,7 +79,7 @@ public class MatchedGPSRoute implements FixedGeography {
 
 	public int getOccurrencesOfEdge_2(Geometry geometry, boolean useDir) {
 		int n = 0;
-		edgeList = this.getRouteAsEdges();
+		ArrayList<Geometry> edgeList = this.getRouteAsEdges();
 		for (Geometry e : edgeList) {
 			if (useDir) {	// consider direction
 				if (geometry == e) n++;
@@ -113,12 +113,25 @@ public class MatchedGPSRoute implements FixedGeography {
 		Road firstRoad = snapTool.getRoadByCoordinate(firstC);
 
 		Geometry currentEdge = firstRoad.getGeometry();
+		if (currentEdge == null) {
+			currentEdge = firstRoad.getGeometry();
+		}
 		edges.add(currentEdge);
 
 		for (int i=1; i<lineString.length; i++) {
 			Road theRoad = snapTool.getRoadByCoordinate(lineString[i]);
 			if (theRoad.getGeometry() != currentEdge) {
 				currentEdge = theRoad.getGeometry();
+				if (currentEdge==null) {
+					Geometry geom = theRoad.getGeometry();
+					try {
+						System.out.println(theRoad.getIdentifier() + " has no edge  " + geom);
+					} catch (NoIdentifierException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						
+					}
+				}
 				edges.add(currentEdge);
 			}
 		}

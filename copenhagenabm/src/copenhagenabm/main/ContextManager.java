@@ -137,7 +137,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private static int agentCounter = 0;
 
-	private static int calibrationAgentsToModel; // The number of the agents we model for the calibration agents 
+	private static int calibrationAgentsToModel; // The number of the agents we model for each of the calibration routes 
 
 	public static void incrementAgentCounter() {
 		agentCounter++;
@@ -669,15 +669,15 @@ public class ContextManager implements ContextBuilder<Object> {
 		setCrs(ContextManager.roadProjection.getCRS());
 
 		simpleDistance = new SimpleDistance(getCrs(), TARGET_EPSG);
-		
+
 		// build the junctions
 		buildJunctionGeography();
-		
+
 		// build the roads
 		buildRoadNetwork();
-		
+
 		buildSpatialIndexRoad();
-		
+
 
 		if (inCalibrationMode()) {
 
@@ -713,7 +713,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		//			}
 
 		try {
-			
+
 			// Create the buildings - context and geography projection
 			buildingContext = new BuildingContext();
 			buildingProjection = GeographyFactoryFinder.createGeographyFactory(null).createGeography(
@@ -726,7 +726,7 @@ public class ContextManager implements ContextBuilder<Object> {
 			SpatialIndexManager.createIndex(buildingProjection, Building.class);
 			LOGGER.log(Level.FINER, "Read " + buildingContext.getObjects(Building.class).size() + " buildings from "
 					+ buildingFile);
-			
+
 			// create the zones - context and geography projection
 			zoneContext = new ZoneContext();
 			zoneProjection = GeographyFactoryFinder.createGeographyFactory(null).createGeography(
@@ -738,7 +738,7 @@ public class ContextManager implements ContextBuilder<Object> {
 			SpatialIndexManager.createIndex(zoneProjection, Zone.class);
 			LOGGER.log(Level.FINER, "Read " + zoneContext.getObjects(Zone.class).size() + " zones from "
 					+ zoneFile);
-			
+
 			// Create the zones
 
 			/* 
@@ -872,7 +872,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		// build the junctions
 
 		// TODO: this here throws errors (Road: Error: this Road object already has two Junctions.)
-//		buildRoadNetwork();
+		//		buildRoadNetwork();
 
 		try {
 			loadMatchedGPSRoutes(gisDataDir);
@@ -1004,7 +1004,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		// 2. loop through the edges and add them to the index
 
 
-//		int cntr = 1;
+		//		int cntr = 1;
 
 		for (Road r : roads) {
 			Envelope geom =  r.getGeometry().getEnvelopeInternal();
@@ -1055,7 +1055,7 @@ public class ContextManager implements ContextBuilder<Object> {
 				jump = false;
 			}
 
-//			cntr++;
+			//			cntr++;
 		}
 
 		System.out.println("Road segment index populated.");
@@ -1098,30 +1098,32 @@ public class ContextManager implements ContextBuilder<Object> {
 		ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
 
 		ArrayList<String> zonesNotFound = new ArrayList<String>();
-		
+
 		for (MatrixReader.Spawn spawn: this.spawns) {
 			schedule.schedule(ScheduleParameters.createOneTime(spawn.getSpawnAtTick(), 
 					ScheduleParameters.LAST_PRIORITY, 1), this, 
 					"spawnAgent", spawn.getZoneFrom(), spawn.getZoneTo());
 
+			System.out.println("SPAWN AT " + spawn.getSpawnAtTick());
+
 			if (ContextManager.getZoneByID(spawn.getZoneFrom())==null) {
 				if (!zonesNotFound.contains(spawn.getZoneFrom())) {
 					zonesNotFound.add(spawn.getZoneFrom());
 				}
-				
+
 			}
-			
+
 			spawnCounter++;
 
 		}
-		
+
 
 		for (String s : zonesNotFound) {
 			System.out.println("NOT IN .shp: " + s);
 		}
-		
+
 		System.out.println(spawnCounter + " SPAWNS" );
-		
+
 	}
 
 	public void spawnAgent(String zFrom, String zTo) {
@@ -1141,10 +1143,11 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * @param resultRouteID
 	 * @param matchedGPSRoute
 	 */
-
 	public void spawnAgentByCoordinates(Coordinate from, Coordinate to, int resultRouteID, MatchedGPSRoute matchedGPSRoute) {
 
 		AgentFactory agentFactory = new AgentFactory();
+
+		int ac = this.agentCounter;
 
 		agentFactory.createAgent(from, to, resultRouteID, matchedGPSRoute);
 
@@ -1302,7 +1305,15 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public synchronized static int getCurrentTick() {
-		return new Integer((int) RunEnvironment.getInstance().getCurrentSchedule().getTickCount());
+
+		RunEnvironment instance = RunEnvironment.getInstance();
+
+		// if there's no environment we just return 0 need that for test reasons
+		if (instance == null) {
+			return 0;
+		} else 
+
+			return new Integer((int) instance.getCurrentSchedule().getTickCount());
 	}
 
 
@@ -1365,37 +1376,52 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		Iterable<IAgent> agents = agentGeography.getAllObjects();
 
-		agents = agentGeography.getAllObjects();
+		//		agents = agentGeography.getAllObjects();
 
 		for (IAgent cphA : agents) {
 
-			if (!cphA.isTerminated()) {
+			System.out.println("(" + ContextManager.getCurrentTick() + ") - A(" + cphA.getID() + ") " + cphA.getPosition());
 
-				//				if (cphA.isToBeKilled()) {
+			if (cphA.isAtDestination()) {
 
-				//					killAgent(cphA);
+				// numberOfKills = 0;
 
-				//					if (numberOfKills==5) {
-				//
-				//						System.out.println("More than 5 tries for route " + cphA.getRoute().getID() + ", everybody got killed. Lets jump to the next route");
-				//						numberOfKills = 0;
-				//						jumpToNextRoute(currentTick);
-				//						// scheduleNewCalibrationAgent(currentTick);
-				//
-				//					} else {
-				//						scheduleNewCalibrationAgent(currentTick);
-				//					}
+				cphA.writeHistory(ContextManager.getModelRunID());
 
-				//				} else {
+				// remove the agent
+				ContextManager.removeAgent(cphA);
 
-				if (cphA.isAtDestination()) {
+				// decrement the counter
+				setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
 
-					// numberOfKills = 0;
+				if (getCalibrationAgentsToModel()>0) {
 
-					cphA.writeHistory(ContextManager.getModelRunID());
+					// schedule the next agent
 
-					// remove the agent
-					// System.out.println("remove 1");
+					scheduleNewCalibrationAgent(currentTick);
+
+				} else {
+
+					// spawn the next agent from the stack
+
+					jumpToNextRoute(currentTick);
+					// scheduleNewCalibrationAgent(currentTick);
+				}
+
+			} else {
+
+				if (cphA.isMoreThan50PercentOverGPSRouteDistance()) {
+
+					System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + cphA.getID() + ") > 50%");
+
+					cphA.setDidNotFindDestination(true);
+					this.canceledAgents  +=1;
+					//							System.out.println("MORETHAN50%");
+
+					cphA.setTerminated(true);
+					Route route = cphA.getRoute();
+					ContextManager.getRouteContext().add(route);
+
 					getAgentContext().remove(cphA);
 
 					setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
@@ -1414,46 +1440,16 @@ public class ContextManager implements ContextBuilder<Object> {
 						// scheduleNewCalibrationAgent(currentTick);
 					}
 
+
+
 				} else {
 
-					if (cphA.isMoreThan50PercentOverGPSRouteDistance()) {
-
-						cphA.setDidNotFindDestination(true);
-						this.canceledAgents  +=1;
-						//							System.out.println("MORETHAN50%");
-
-						cphA.setTerminated(true);
-						Route route = cphA.getRoute();
-						ContextManager.getRouteContext().add(route);
-
-						getAgentContext().remove(cphA);
-
-						setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
-
-						if (getCalibrationAgentsToModel()>0) {
-
-							// schedule the next agent
-
-							scheduleNewCalibrationAgent(currentTick);
-
-						} else {
-
-							// spawn the next agent from the stack
-
-							jumpToNextRoute(currentTick);
-							// scheduleNewCalibrationAgent(currentTick);
-						}
-
-
-
-					} else {
-
-						cphA.step();
-					}
+					cphA.step();
 				}
 			}
 		}
 	}
+	//	}
 	//			} else {
 	//				cphA.setTerminated(true);
 	//
@@ -1517,6 +1513,9 @@ public class ContextManager implements ContextBuilder<Object> {
 		getAgentContext().remove(agent);
 	}
 
+	/**
+	 * remove the agents 
+	 */
 	public void removeAgentsToBeRemoved() {
 
 		//		System.out.println("BEFORE " + getAgentContext().getObjects(IAgent.class).size());
@@ -1530,6 +1529,8 @@ public class ContextManager implements ContextBuilder<Object> {
 		}
 
 		int cntr = 0;
+
+		Context<IAgent> ac = getAgentContext();
 
 		for (IAgent a : agentsToBeRemoved) {
 
@@ -1548,11 +1549,14 @@ public class ContextManager implements ContextBuilder<Object> {
 						scheduleNewCalibrationAgent(ContextManager.getCurrentTick());
 					}
 
+					ac.remove(a);
+					System.out.println("(" + ContextManager.getCurrentTick() + ") Agent ID=" + a.getID() + " removed.");
+
 				} else {
 
 					try {
 						a.logBasics();
-						Context<IAgent> ac = getAgentContext();
+
 						ac.remove(a);
 						// System.out.print(a);
 					} catch (java.lang.NullPointerException npe) {
@@ -1572,9 +1576,11 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public void spawnAgents() {
 		ArrayList<IAgent> aTBS = ContextManager.getAgentsToBeSpawned();
+
 		if (aTBS.contains(null)) {
-			System.out.println("NULL contained");
+			System.out.println("spawnAgents() : null contained in list");
 		}
+
 		for (IAgent a : (ArrayList<IAgent>) aTBS.clone()) {
 			if (a==null) {
 				System.out.println(a);
@@ -1596,7 +1602,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		spawnAgents();
 		ContextManager.agentsToBeSpawned = new ArrayList<IAgent>();
-		removeAgentsToBeRemoved();
+
 
 		int currentTick = getCurrentTick();
 		int terminationTick = new Integer((int) (new Integer(ContextManager.getProperty("EndTime")) ));
@@ -1618,6 +1624,9 @@ public class ContextManager implements ContextBuilder<Object> {
 				e.printStackTrace();
 			}
 		}
+
+		// finally we remove the agents scheduled for removal
+		removeAgentsToBeRemoved();
 
 	}
 
@@ -2459,8 +2468,6 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static int getDistanceSnap() {
 		return new Integer(ContextManager.getProperty(GlobalVars.distanceSnap));
 	}
-
-
 
 
 }

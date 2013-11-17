@@ -1,5 +1,6 @@
 package copenhagenabm.routes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -65,7 +66,9 @@ public class OverlapCalculator {
 			simulatedHashMap.put(g, 0);
 		}
 
-		for (Geometry g : matchedGPSRoute.getRouteAsEdges()) {
+		ArrayList<Geometry> edges = matchedGPSRoute.getRouteAsEdges();
+		boolean contains_null = edges.contains(null);
+		for (Geometry g : edges) {
 			// containsvalue would not work - have to loop 
 
 			//if (simulatedHashMap.containsValue(g)) {

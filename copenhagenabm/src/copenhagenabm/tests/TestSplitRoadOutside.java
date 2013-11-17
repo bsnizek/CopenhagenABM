@@ -34,7 +34,7 @@ public class TestSplitRoadOutside {
 	
 	private static final int kNearestEdgeDistance = 10000;
 	private static final String TARGET_EPSG = "EPSG:2197";
-	private boolean DEBUG_MODE = false;
+	private boolean DEBUG_MODE = true;
 	private SnapTool sTool;
 	GeometryFactory fact = new GeometryFactory();
 	private HashMap<Integer, Road> roadIndex;

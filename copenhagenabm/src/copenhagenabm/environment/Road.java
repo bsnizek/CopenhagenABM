@@ -220,7 +220,7 @@ public class Road implements FixedGeography  {
 
 	@Override
 	public String toString() {
-		return "road: " + this.identifier + (this.name == null ? "" : "(" + this.name + ")");
+		return "road: " + this.identifier + (this.name == null ? "" : "(" + this.name + ")" + " " + this.getGeometry());
 	}
 
 	/**

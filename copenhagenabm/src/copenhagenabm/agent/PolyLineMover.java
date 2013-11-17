@@ -114,27 +114,34 @@ public class PolyLineMover {
 			if (dd<d) {
 				d = dd;
 				currentLineSegmentID = i;
-				if (DEBUG_MODE) {
-					cp = cp + pLPart.getLength();
-				} else {
-					cp = cp + getOrthodromicLineLength(pLPart);
-				}
+			}
+			
+			i++;
+		}
+		
+		// now add each segment until we reach the current segment. 
+		for (int j=0; j<currentLineSegmentID;j++) {
+			if (DEBUG_MODE) {
+				cp = cp + polylineParts.get(j).getLength();
+			} else {
+				cp = cp + getOrthodromicLineLength(polylineParts.get(j));
 			}
 		}
+		
 
-		// lets take the last one off again
+//		// lets take the last one off again
+//		if (DEBUG_MODE) {
+//			cp = cp - polylineParts.get(currentLineSegmentID).getLength();
+//		} else {
+//			cp = cp - getOrthodromicLineLength(polylineParts.get(currentLineSegmentID));
+//		}
+
+		currentLineSegment = polylineParts.get(currentLineSegmentID);
+
 		if (DEBUG_MODE) {
-			cp = cp - polylineParts.get(i).getLength();
+			cp = cp + currPos.distance(polylineParts.get(currentLineSegmentID).getCoordinateN(0));
 		} else {
-			cp = cp - getOrthodromicLineLength(polylineParts.get(i));
-		}
-
-		currentLineSegment = polylineParts.get(i);
-
-		if (DEBUG_MODE) {
-			cp = cp + currPos.distance(polylineParts.get(i).getCoordinateN(0));
-		} else {
-			cp = cp + getOrthodromicDistance(currPos, polylineParts.get(i).getCoordinateN(0));
+			cp = cp + getOrthodromicDistance(currPos, polylineParts.get(currentLineSegmentID).getCoordinateN(0));
 		}
 		this.currentPositionOnPolyline = cp;
 	}
@@ -240,6 +247,11 @@ public class PolyLineMover {
 		if (overshoot > 0.0d) {
 
 			List<Road> roads = this.targetJunction.getRoads();
+
+			if (this.targetJunction.getId() == 38078) {
+				System.out.println("38078");
+			}
+
 			EdgeSelector es = new EdgeSelector(roads, road, this.getAgent());
 			Road newRoad = es.getRoad();
 
@@ -260,6 +272,7 @@ public class PolyLineMover {
 			if (agent.isAtDestination()) {
 				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
 				this.logToPostgres();
+				ContextManager.removeAgent(agent);
 				return null;
 			}
 
@@ -294,11 +307,11 @@ public class PolyLineMover {
 				this.road = newRoad;
 
 				// add the road to the route
-				
+
 				Route theRoute = this.agent.getRoute();
-				
+
 				if (theRoute != null) {
-				
+
 					theRoute.addEdgeGeometry(newRoad, newRoad.getGeometry());
 				}
 
@@ -316,7 +329,9 @@ public class PolyLineMover {
 				placeAgentOnRoad(road, nextPosition);
 				logToPostgres();
 
-				return new OvershootData(road, targetJunction, nextPosition);
+//				return new OvershootData(road, targetJunction, nextPosition);
+				
+				return null;
 
 			} 
 
@@ -328,7 +343,9 @@ public class PolyLineMover {
 			if (agent.isAtDestination()) {
 
 				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
-				// this.logToPostgres(agent.getDestinationCoordinate());
+
+				ContextManager.removeAgent(agent);
+
 				return null;
 			}
 
@@ -363,7 +380,7 @@ public class PolyLineMover {
 
 		} else {
 
-//			double dsum = 0.0d;
+			//			double dsum = 0.0d;
 			double d2 = distance;
 
 			int i = 0;
@@ -542,22 +559,22 @@ public class PolyLineMover {
 		} else {
 			if (ContextManager.isPostgreSQLLoggerOn()) {
 				ContextManager.getPostgresLogger().log(ContextManager.getCurrentTick(), agent);
-//				System.out.print(".");
+				//				System.out.print(".");
 			}
 		}
 	}
 
 
-//	private void logToPostgres(Coordinate destinationCoordinate) {
-//		if (DEBUG_MODE) {
-//			System.out.println(">> " +destinationCoordinate);
-//		} else {
-//			if (ContextManager.isPostgreSQLLoggerOn()) {
-//				ContextManager.getPostgresLogger().log(ContextManager.getCurrentTick(), agent, destinationCoordinate);
-//			}
-//		}
-//
-//	}
+	//	private void logToPostgres(Coordinate destinationCoordinate) {
+	//		if (DEBUG_MODE) {
+	//			System.out.println(">> " +destinationCoordinate);
+	//		} else {
+	//			if (ContextManager.isPostgreSQLLoggerOn()) {
+	//				ContextManager.getPostgresLogger().log(ContextManager.getCurrentTick(), agent, destinationCoordinate);
+	//			}
+	//		}
+	//
+	//	}
 
 
 }
