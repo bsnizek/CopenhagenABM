@@ -7,6 +7,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 
 import copenhagenabm.agent.CPHAgent;
 import copenhagenabm.agent.IAgent;
+import copenhagenabm.main.ContextManager;
 import copenhagenabm.orm.Dot;
 import copenhagenabm.orm.HibernateUtil;
 
@@ -44,7 +45,9 @@ public class PostgresLogger {
 
 
 	public void close() {
-		session.getTransaction().commit();
+		if (ContextManager.isPostgreSQLLoggerOn()) {
+			session.getTransaction().commit();
+		}
 	}
 
 	/**
@@ -56,7 +59,7 @@ public class PostgresLogger {
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
 
-//		System.out.println("commited");
+		//		System.out.println("commited");
 
 	}
 

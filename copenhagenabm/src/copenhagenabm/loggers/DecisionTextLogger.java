@@ -23,7 +23,7 @@ public class DecisionTextLogger {
 			return buf.toString() + "\n";
 		}
 		
-		public String getHeader(Handler h) {
+		public String getHead(Handler h) {
 			return "--H--";
 		}
 		

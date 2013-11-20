@@ -22,8 +22,8 @@ public class SuccessLogger {
 			return buf.toString() + "\n";
 		}
 		
-		public String getHeader(Handler h) {
-			return "agentID;gpsRouteID;pathSize";
+		public String getHead(Handler h) {
+			return "agentID;angleToDestWeight;totalIterations;successfulIterations;secondsrun\n";
 		}
 		
 //		public String getTail(Handler h) {

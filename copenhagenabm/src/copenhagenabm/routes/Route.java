@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import repastcity3.exceptions.NoIdentifierException;
@@ -22,13 +21,15 @@ import copenhagenabm.tools.SimpleDistance;
 
 
 /**
- * Route.java contains the Route taken buy an agent and provides with tools to cpompare to other routes. 
+ * Route.java contains the Route taken buy an agent and provides with tools to compare to other routes. 
  * 
  * 
  * @author Bernhard Snizek <b@snizek.com>
  *
  */
 public class Route implements FixedGeography {
+
+	private boolean ROUTE_DEBUG = false;
 
 	// TODO: throw this into the settings file
 	private static final String TARGET_EPSG = "EPSG:2197";
@@ -103,14 +104,6 @@ public class Route implements FixedGeography {
 
 	public void addEdgeGeometry(Road r, Geometry g) {
 		edgeList.add(g);
-
-		//		try {
-		//			System.out.println(g.getCoordinates()[0] + "\t" + r.getIdentifier() + "\t" + g.getCoordinates().length);
-		//		} catch (NoIdentifierException e) {
-		//			// TODO Auto-generated catch block
-		//			e.printStackTrace();
-		//		}
-
 		roadList.add(r);
 	}
 
@@ -131,12 +124,182 @@ public class Route implements FixedGeography {
 	}
 
 	public LineString getRouteAsLineString() {
+		ArrayList<LineString> edges = getRouteAsLineStringList();
 
+		if (edges.size()>1) {
+
+			// let us kick out duplicates in the beginning of the edge list
+			boolean GO = edges.get(0).equals(edges.get(1));
+			while (GO) {
+				edges.remove(0);
+				roadList.remove(0);
+				edgeList.remove(0);
+				if (ROUTE_DEBUG) {
+					System.out.println("removed a duplicate edge from the beginning of a edge list");
+				}
+				if ((edges.size()>1) && edges.get(0).equals(edges.get(1)))
+					GO=true;
+				else 
+					GO=false;
+			}
+
+			if (edges.size()>1) {
+
+				ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
+
+				LineString firstSegment = edges.get(0);
+				LineString secondSegment = edges.get(1);
+				LineString thirdSegment = null;
+				if (edges.size()>2) {
+					thirdSegment = edges.get(2);
+				}
+
+
+				if ((edges.size()>2) && (firstSegment.getCoordinateN(0).equals(secondSegment.getCoordinateN(0)) && 
+						(firstSegment.getCoordinateN(firstSegment.getNumPoints()-1).equals(secondSegment.getCoordinateN(secondSegment.getNumPoints()-1))))) {
+					// first of first == first of second AND
+					// last of first == last of second
+					// A->B->C, A->D->C, E->A
+					if (ROUTE_DEBUG)
+						System.out.println("*1");
+
+					if ((firstSegment.getCoordinateN(0).equals(secondSegment.getCoordinateN(secondSegment.getNumPoints()-1))) && 
+							secondSegment.getCoordinateN(secondSegment.getNumPoints()-1).equals(thirdSegment.getCoordinateN(0))) {
+						// A->B, B->A, A->C
+						// no reversal
+						if (ROUTE_DEBUG)
+							System.out.println("*10");
+						// we just ass the first one, the second and the third will be reversen
+						Coordinate[] fC = firstSegment.getCoordinates();
+						ArrayList<Coordinate> al = new ArrayList<Coordinate>(Arrays.asList(fC));
+						coords.addAll(al);
+
+					} else 
+
+						if (thirdSegment.getCoordinateN(thirdSegment.getNumPoints()-1).equals(secondSegment.getCoordinateN(0))) {
+							if (ROUTE_DEBUG)
+								System.out.println("*2");
+							// we just ass the first one, the second and the third will be reversen
+							Coordinate[] fC = firstSegment.getCoordinates();
+							ArrayList<Coordinate> al = new ArrayList<Coordinate>(Arrays.asList(fC));
+							coords.addAll(al);
+
+						} else if ((firstSegment.getCoordinateN(firstSegment.getNumPoints()-1).equals(secondSegment.getCoordinateN(secondSegment.getNumPoints()-1)) &&
+								firstSegment.getCoordinateN(firstSegment.getNumPoints()-1).equals(thirdSegment.getCoordinateN(0)))) {
+
+							// last of first == last of second
+							// last of first == first of third
+							if (ROUTE_DEBUG)
+								System.out.println("*3");
+
+							Coordinate[] fC = firstSegment.getCoordinates();
+							ArrayList<Coordinate> al = new ArrayList<Coordinate>(Arrays.asList(fC));
+							Collections.reverse(al);
+							coords.addAll(al);
+						} else 
+							if (ROUTE_DEBUG)
+								System.out.println("phew");
+					// A->B, A->B, A->B
+					// reverse the second one
+					// == A->B, B->A, A-B
+					Coordinate[] fC = firstSegment.getCoordinates();
+					ArrayList<Coordinate> al = new ArrayList<Coordinate>(Arrays.asList(fC));
+					coords.addAll(al);
+
+
+				} else 
+
+					if (firstSegment.getCoordinateN(firstSegment.getNumPoints()-1).equals(secondSegment.getCoordinateN(0))) {
+						// last coordinate of first segment and first one of second
+						if (ROUTE_DEBUG)
+							System.out.println("*4");
+
+						Coordinate[] fC = firstSegment.getCoordinates();
+						ArrayList<Coordinate> al = new ArrayList<Coordinate>(Arrays.asList(fC));
+						coords.addAll(al);
+					} else 
+
+						if (firstSegment.getCoordinateN(0).equals(secondSegment.getCoordinateN(0))) {
+							if (ROUTE_DEBUG)
+								System.out.println("*5");
+							// first coordinate of first segment = first coordinate of second. Lets reverse the first one
+							Coordinate[] fC = firstSegment.getCoordinates();
+							ArrayList<Coordinate> afC = new ArrayList<Coordinate>(Arrays.asList(fC));
+							Collections.reverse(afC);
+							coords.addAll(afC);
+						} else 
+
+							if (firstSegment.getCoordinateN(firstSegment.getNumPoints()-1).equals(secondSegment.getCoordinateN(secondSegment.getNumPoints()-1))) {
+								if (ROUTE_DEBUG)
+									System.out.println("*6");
+								// last coordinate of both segments match - 
+								// let us do nothing for now, the second segment 
+								// will be reversed automatically at the next iteration
+								Coordinate[] fC = firstSegment.getCoordinates();
+								ArrayList<Coordinate> afC = new ArrayList<Coordinate>(Arrays.asList(fC));
+								coords.addAll(afC);
+							} else
+
+								if (firstSegment.getCoordinateN(0).equals(secondSegment.getCoordinateN(secondSegment.getNumPoints()-1)) ) {
+									if (ROUTE_DEBUG)
+										System.out.println("*7");
+									// the first coordinate of the first one == the last of the last one
+									// -> reverse the first one, the second one will be reversed
+									Coordinate[] fC = firstSegment.getCoordinates();
+									ArrayList<Coordinate> afC = new ArrayList<Coordinate>(Arrays.asList(fC));
+									Collections.reverse(afC);
+									coords.addAll(afC);
+								}
+
+								else {
+									System.out.println("coordinates do not fit");
+								}
+
+				for (int i=1;i<edges.size(); i++) {
+					Coordinate[] eC = edges.get(i).getCoordinates();
+					ArrayList<Coordinate> aC = new ArrayList<Coordinate>(Arrays.asList(eC));
+					if (aC.get(0).equals(coords.get(coords.size()-1))) {
+						aC.remove(0);
+						coords.addAll(aC);
+						if (ROUTE_DEBUG)
+							System.out.println("*8 " + i);
+					} else {
+						// last from aC is last from previous
+						// lets reverse aC
+						Collections.reverse(aC);
+						if (ROUTE_DEBUG)
+							System.out.println("*9 " + i + " " + aC);
+						aC.remove(0);
+						coords.addAll(aC);
+					}
+				}
+
+				return createLineStringFromCoordinateArray(coords);
+			}
+
+		}
+
+		return edges.get(0);
 		
-		// This is an evil hack but now way around. getR...List sometimes does rerturn null
-		
+	}
+
+	private LineString createLineStringFromCoordinateArray(ArrayList<Coordinate> cc) {
+		ArrayList<Coordinate> cleanedList = new ArrayList<Coordinate>();
+		Coordinate lastCoord = null;
+		for (Coordinate c : cc) {
+			if (!c.equals(lastCoord)) {
+				cleanedList.add(c);
+			}
+		}
+		return fact.createLineString(cleanedList.toArray(new Coordinate[cleanedList.size()]));
+	}
+
+	public LineString __DEPRECTAED__getRouteAsLineString() {
+
+
+		// This is an evil hack but now way around. getR...List sometimes does return null
 		ArrayList<LineString> edges = null;
-		
+
 		int loopCounter = 0;
 		while (edges == null) {
 			edges = getRouteAsLineStringList();
@@ -150,8 +313,8 @@ public class Route implements FixedGeography {
 				break;
 			}
 		}
-		
-		
+
+
 		ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 
 		if (edges.size()>1) {
@@ -261,20 +424,25 @@ public class Route implements FixedGeography {
 			}
 			return fact.createLineString(cc);
 		} else {
-			
+
 			if (edges.size()==0) {
 				edges = getRouteAsLineStringList();
 			}
-			
-			return edges.get(0);
+
+			if (edges.size() == 0) {
+				System.out.println("Route=NULL");
+				return null;
+			} else
+
+				return edges.get(0);
 		}
 	}
 
 
 
 	public double getLength() {
-		LineString ras = this.getRouteAsLineString();
-		return ras.getLength();
+		//		LineString ras = this.getRouteAsLineString();
+		return this.getLengthInMetres();
 	}
 
 	/**
@@ -415,6 +583,7 @@ public class Route implements FixedGeography {
 	 * @param window : search window
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean isInALoop(int window, int occurence) {
 		ArrayList<Road> rl = (ArrayList<Road>) this.roadList.clone();
 		Collections.reverse(rl);
@@ -460,6 +629,41 @@ public class Route implements FixedGeography {
 		this.roadList.remove(this.roadList.size()-1);
 		this.edgeList.remove(this.edgeList.size()-1);
 
+	}
+	
+	public String getRouteSegmentIDsAsString() {
+		String id = "";
+		String s = "(";
+		for (Road r : roadList) {
+			try {
+				id = r.getIdentifier();
+			} catch (NoIdentifierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			s = s + "'" + id + "',";
+			
+		}
+		
+		return s.substring(0,s.length()-1) + ")";
+	}
+	
+	public ArrayList<String> getEdgeIDs() {
+		ArrayList<String> a = new ArrayList<String>();
+		for (Road road : this.getRouteAdsRoadList()) {
+			try {
+				a.add(road.getIdentifier());
+			} catch (NoIdentifierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return a;
+	}
+	
+	public String toString() {
+		return "Route ID=" + this.getGPSID() + " n=" + this.edgeList.size()  + " l=" + getLength() + " \"identifier\" IN " + getRouteSegmentIDsAsString();
 	}
 
 }

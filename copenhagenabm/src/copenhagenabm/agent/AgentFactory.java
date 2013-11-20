@@ -66,6 +66,7 @@ public class AgentFactory {
 	 * 
 	 */
 	public CPHAgent createAgent(Coordinate from, Coordinate to, int sourceRouteID, MatchedGPSRoute matchedGPSRoute) {
+		
 		ContextManager.incrementAgentCounter();
 
 		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute); // Create a new agent

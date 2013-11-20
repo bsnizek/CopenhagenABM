@@ -4,7 +4,7 @@ import repastcity3.exceptions.NoIdentifierException;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineString;
+//import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.environment.Road;
@@ -56,7 +56,7 @@ public class ScoreFunctions {
 		double u = ux * vx + uy * vy;
 		double l = Math.sqrt(ux*ux + uy*uy) * Math.sqrt(vx*vx + vy*vy);
 		double u_l = u/l;
-		double u_d = u_l-1;
+//		double u_d = u_l-1;
 		double xxx = (Math.toDegrees(Math.acos(u_l)));
 
 		double xx;

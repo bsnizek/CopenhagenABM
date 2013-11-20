@@ -88,33 +88,36 @@ public class RouteLogger {
 	}
 	
 	public void writeRoute(Route r, int agentID) throws FactoryConfigurationError, SchemaException, IllegalAttributeException {
-		FeatureCollection collection = FeatureCollections.newCollection();
-		FeatureType ftMeasurement = FeatureTypeBuilder.newFeatureType(new AttributeType[] {geomField, ID}, "route"); 
-		LineString mls = r.getRouteAsLineString(); 
-		
-//		int N = mls.getNumGeometries();
-//
-//		LineString lines[] = new LineString[ N ];
-//		for ( int i = 0; i < N; i++ ) {
-//		    lines[ i ] = (LineString) mls.getGeometryN( i );
-//		}
-	
-
-		Object[] o = new Object [] {mls, agentID};
-		Feature ft = ftMeasurement.create(o, "measurement-" + i);
-
-		collection.add(ft);
-		
-		try {
-			fs.addFeatures(collection);
-//			transaction.commit();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		i++;
-		
+		System.out.println("RoutLogger.writeRoute() currently DEPRECATED.");
 	}
+//	public void writeRoute(Route r, int agentID) throws FactoryConfigurationError, SchemaException, IllegalAttributeException {
+//		FeatureCollection collection = FeatureCollections.newCollection();
+//		FeatureType ftMeasurement = FeatureTypeBuilder.newFeatureType(new AttributeType[] {geomField, ID}, "route"); 
+//		LineString mls = r.getRouteAsLineString(); 
+//		
+////		int N = mls.getNumGeometries();
+////
+////		LineString lines[] = new LineString[ N ];
+////		for ( int i = 0; i < N; i++ ) {
+////		    lines[ i ] = (LineString) mls.getGeometryN( i );
+////		}
+//	
+//
+//		Object[] o = new Object [] {mls, agentID};
+//		Feature ft = ftMeasurement.create(o, "measurement-" + i);
+//
+//		collection.add(ft);
+//		
+//		try {
+//			fs.addFeatures(collection);
+////			transaction.commit();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		
+//		i++;
+//		
+//	}
 	
 	/*
 	 * 

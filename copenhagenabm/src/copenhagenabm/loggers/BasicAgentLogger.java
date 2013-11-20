@@ -32,7 +32,7 @@ public class BasicAgentLogger {
 			return buf.toString() + "\n";
 		}
 		
-		public String getHeader(Handler h) {
+		public String getHead(Handler h) {
 			return "agentID;birthTick;deathTick;birthZone;deathZone;birthCoord;DeathCoord";
 		}
 	}

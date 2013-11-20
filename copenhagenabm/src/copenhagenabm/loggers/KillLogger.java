@@ -22,7 +22,7 @@ public class KillLogger {
 			return buf.toString() + "\n";
 		}
 		
-		public String getHeader(Handler h) {
+		public String getHead(Handler h) {
 			return "x;y;agentID";
 		}
 		

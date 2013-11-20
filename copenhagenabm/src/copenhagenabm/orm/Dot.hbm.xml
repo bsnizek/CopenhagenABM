@@ -11,6 +11,8 @@
         <property name="agentID" type="integer"/>
 
 		<property name="tick" type="integer"/>
+		
+		<property name="routeid" type="integer"/>
         
         <property name="roadID" type="string"/>
         

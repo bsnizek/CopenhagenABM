@@ -1,7 +1,7 @@
 package copenhagenabm.main;
 
 /*
-©Copyright 2012 Bernhard Snizek, besn@life.ku.dk
+©Copyright 2012, 2013 Bernhard Snizek, besn@life.ku.dk
 ©Copyright 2012 Nick Malleson
 This file is part of copenhagenABM
 
@@ -109,7 +109,7 @@ import copenhagenabm.loggers.KillLogger;
 import copenhagenabm.loggers.PostgresLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
 //import copenhagenabm.loggers.SimpleLoadLogger;
-import copenhagenabm.loggers.SuccessLogger;
+//import copenhagenabm.loggers.SuccessLogger;
 import copenhagenabm.main.CopenhagenABMLogging;
 import copenhagenabm.routes.MatchedGPSRoute;
 import copenhagenabm.routes.Route;
@@ -171,7 +171,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * 
 	 */
 
-	private static BasicAgentLogger basicAgentLogger = new  BasicAgentLogger();
+	private static BasicAgentLogger basicAgentLogger;
 
 
 	public static BasicAgentLogger getBasicAgentLogger() {
@@ -188,7 +188,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * 
 	 */
 
-	private static DecisionTextLogger decisionTextLogger = new  DecisionTextLogger();
+	private static DecisionTextLogger decisionTextLogger;
 
 	/**
 	 * 
@@ -210,15 +210,6 @@ public class ContextManager implements ContextBuilder<Object> {
 	/**
 	 * 
 	 * A logger for the successes within the calibration harvesting 
-	 * 
-	 */
-
-	private static SuccessLogger successLogger = new SuccessLogger();
-
-
-	/**
-	 * 
-	 * The dotlogger which writes into the postgreSQL database
 	 * 
 	 */
 
@@ -308,6 +299,8 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private static SimpleNearestRoadCoordinateCache nearestRoadCoordinateCache;
 
+	private static MatchedRouteCache matchedRouteCache = new MatchedRouteCache();
+
 	/**
 	 * The crowding network holds the number of agents per edge at the current moment. 
 	 */
@@ -317,7 +310,6 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	//	private CrowdingNetworkLogger crowdingNetworkLogger;
 
-	//	private static DecisionLogger decisionLogger;
 
 	private RouteLogger routeLogger;
 	private static Coordinate[] resultRouteCoordinates;
@@ -343,11 +335,9 @@ public class ContextManager implements ContextBuilder<Object> {
 		this.emailTool = emailTool;
 	}
 
-	private long startTime;
-
 	private String gisDataDir;
 
-	public static int canceledAgents = 0;
+	private static boolean launchNextCalibrationAgent=false;
 
 	private static int numberOfKills = 0;
 
@@ -366,6 +356,8 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public static ArrayList<IAgent> agentsToBeRemoved = new ArrayList<IAgent>();
 	public static ArrayList<IAgent> agentsToBeSpawned = new ArrayList<IAgent>();
+
+	private static CalibrationModeData calibrationModeData;
 
 	public static ArrayList<IAgent> getAgentsToBeSpawned() {
 		return agentsToBeSpawned;
@@ -455,6 +447,24 @@ public class ContextManager implements ContextBuilder<Object> {
 				new GeographyParameters<Road>(new SimpleAdder<Road>()));
 		String roadFile = gisDataDir + getProperty(GlobalVars.RoadShapefile);
 		GISFunctions.readShapefile(Road.class, roadFile, roadProjection, roadContext);
+
+		// here we try to remove all roads which have no geoemtry
+
+		IndexedIterable<Road> rds = roadContext.getObjects(Road.class);
+
+		for (Road r : rds) {
+			Geometry g = r.getGeometry();
+			if (g==null) {
+				roadContext.remove(r);
+
+			}
+			Coordinate c1 = r.getGeometry().getCoordinates()[0]; // First coord
+			Coordinate c2 = r.getGeometry().getCoordinates()[r.getGeometry().getNumPoints() - 1]; // Last coord
+			if (c1==c2) {
+				roadContext.remove(r);
+			}
+
+		}
 
 		mainContext.addSubContext(roadContext);
 
@@ -579,8 +589,10 @@ public class ContextManager implements ContextBuilder<Object> {
 
 
 	public void loadTools() {
+
 		// 3. Initialize the tools.
-		emailTool = new EmailTool2("4523710046@textmagic.com ");
+
+		emailTool = new EmailTool2(getNotificationEmailAddress());
 		copenhagenABMTools = new CopenhagenABMTools();
 		snapTool = new SnapTool();
 	}
@@ -657,10 +669,10 @@ public class ContextManager implements ContextBuilder<Object> {
 		try {
 			loadRoadContext(gisDataDir);
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 
@@ -687,6 +699,14 @@ public class ContextManager implements ContextBuilder<Object> {
 
 			buildStandardModel();
 
+		}
+
+		if (ContextManager.isBasicAgentLoggerOn()) {
+			ContextManager.basicAgentLogger = new  BasicAgentLogger();
+		}
+
+		if (ContextManager.isDecisionTextLoggerOn()) {
+			decisionTextLogger = new  DecisionTextLogger();
 		}
 
 		return mainContext;
@@ -805,19 +825,24 @@ public class ContextManager implements ContextBuilder<Object> {
 		LOGGER.log(Level.FINE, "Configuring the environment with data from " + this.getGisDataDir());
 
 		// let us set up the decision text logger 
-		try {
-			ContextManager.getDecisionTextLogger().setup();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+
+		if (getDecisionTextLogger() != null) {
+			try {
+				ContextManager.getDecisionTextLogger().setup();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 		// let us set up the basic agent  logger 
-		try {
-			ContextManager.getBasicAgentLogger().setup();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		if (ContextManager.getBasicAgentLogger() != null) {
+			try {
+				ContextManager.getBasicAgentLogger().setup();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		}
 
 
@@ -831,9 +856,10 @@ public class ContextManager implements ContextBuilder<Object> {
 			e1.printStackTrace();
 		}
 
-		// and the successlogger
+		// and the success logger
 		try {
-			ContextManager.getSuccessLogger().setup();
+			ContextManager.getCalibrationModeData();
+			CalibrationModeData.getSuccessLogger().setup();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -858,14 +884,16 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	}
 
-	private void setInBatchMode(boolean b) {
-		this.inBatchMode = true;
-
-	}
+	//	private void setInBatchMode(boolean b) {
+	//		this.inBatchMode = true;
+	//
+	//	}
 
 	private void buildCalibrationModel(String gisDataDir) {
 
-		startTime = System.currentTimeMillis();
+		ContextManager.calibrationModeData = new CalibrationModeData();
+
+		ContextManager.getCalibrationModeData().setStartTime(System.currentTimeMillis());
 
 		// then we build the spatial index for the roads
 		//		buildSpatialIndexRoad();
@@ -890,29 +918,42 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		theRoadNetwork = new RoadNetwork();
 
+		int tMR = 0;
+
 		// let us populate the matchedGPSRouteStack and the routeStore
 		for (MatchedGPSRoute matchedGPSRoute : ContextManager.getMatchedGPSRoutes()) {
 
 			// 1. we put all matchedRoutes into a stack
 
-			this.matchedGPSRouteStack.add(matchedGPSRoute);
+			int nOE = matchedGPSRoute.getNumberOfEdges();
 
-			//			System.out.println(matchedGPSRoute.getGeometry());
+			if (nOE >= getMinEdgeNumberOfEdgesForCalibration()) {
 
-			// 2. throw the GPS matched route into the route store
+				ContextManager.getMatchedGPSRouteStack().add(matchedGPSRoute);
 
-			//			ContextManager.routeStore.addMatchedGPSRoute(matchedGPSRoute);
-
+			} else {
+				ContextManager.getCalibrationModeData().incrementOmittedMatchedRoute();
+			}
+			tMR = tMR + 1;
 		}
+
+		ContextManager.getCalibrationModeData().setTotalMatchedGPSRoutes(tMR);
+
+		System.out.println(ContextManager.getCalibrationModeData().getOmittedMatchedGPSRoutes() + " of " + tMR + " omitted as they were too short.");
+
+		// now calculate how many iterations we have in total
+
+		ContextManager.getCalibrationModeData().calculateNumberOfIteration();
 
 		if (ContextManager.getCalibrationMode() == CALIBRATION_MODE.SEQUENTIAL) {
 
 			// 3. schedule the first agent. 
 			// 3.1 we pull a route from the stack
-			this.matchedGPSRoute = matchedGPSRouteStack.pop();
-			this.resultRouteCoordinates = ContextManager.matchedGPSRouteProjection.getGeometry(matchedGPSRoute).getCoordinates();
-			this.startCoordinate = resultRouteCoordinates[0];
-			this.endCoordinate = resultRouteCoordinates[resultRouteCoordinates.length-1];
+			ContextManager.setMatchedGPSRoute(getMatchedGPSRouteStack().pop());
+
+			ContextManager.setResultRouteCoordinates(ContextManager.matchedGPSRouteProjection.getGeometry(getMatchedGPSRoute()).getCoordinates());
+			ContextManager.setStartCoordinate(getResultRouteCoordinates()[0]);
+			ContextManager.setEndCoordinate(getResultRouteCoordinates()[getResultRouteCoordinates().length-1]);
 
 			// set the current iteration number to the iteration number from the config file
 			setCalibrationAgentsToModel(ContextManager.getNumberOfRepetitions());
@@ -920,9 +961,11 @@ public class ContextManager implements ContextBuilder<Object> {
 			// schedule the first agent
 			schedule.schedule(ScheduleParameters.createOneTime(0, 
 					ScheduleParameters.LAST_PRIORITY, 1), this, 
-					"spawnAgentByCoordinates", startCoordinate, endCoordinate, matchedGPSRoute.getOBJECTID(), matchedGPSRoute);
+					"spawnAgentByCoordinates", getStartCoordinate(), getEndCoordinate(), getMatchedGPSRoute().getOBJECTID(), getMatchedGPSRoute());
 
-			currentObjectID = matchedGPSRoute.getOBJECTID();
+			currentObjectID = getMatchedGPSRoute().getOBJECTID();
+
+			System.out.println("(" + getCurrentTick() + ") " + getMatchedGPSRouteStack().size() + " routes to go.");
 
 
 		} else {
@@ -966,6 +1009,15 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 
+	public static CalibrationModeData getCalibrationModeData() {
+		return calibrationModeData;
+	}
+
+	public static void setCalibrationModeData(
+			CalibrationModeData calibrationModeData) {
+		ContextManager.calibrationModeData = calibrationModeData;
+	}
+
 	/*
 	 * returns whether we are in explicative mode
 	 */
@@ -985,7 +1037,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public void setTheRoadNetwork(RoadNetwork theRoadNetwork) {
-		this.theRoadNetwork = theRoadNetwork;
+		ContextManager.theRoadNetwork = theRoadNetwork;
 	}
 
 	private void buildSpatialIndexRoad() {
@@ -993,7 +1045,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		System.out.println("Populating road segment index.");
 
 		IndexedIterable<Road> roads = ContextManager.roadContext.getObjects(Road.class);
-		int numberOfRoads = roads.size();
+		//		int numberOfRoads = roads.size();
 
 		// 1. initialize the index
 		Properties p = new Properties();
@@ -1143,11 +1195,10 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * @param resultRouteID
 	 * @param matchedGPSRoute
 	 */
-	public void spawnAgentByCoordinates(Coordinate from, Coordinate to, int resultRouteID, MatchedGPSRoute matchedGPSRoute) {
+	public void spawnAgentByCoordinates(Coordinate from, Coordinate to, 
+			int resultRouteID, MatchedGPSRoute matchedGPSRoute) {
 
 		AgentFactory agentFactory = new AgentFactory();
-
-		int ac = this.agentCounter;
 
 		agentFactory.createAgent(from, to, resultRouteID, matchedGPSRoute);
 
@@ -1206,32 +1257,44 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		RunEnvironment.getInstance().endAt(currentTick);
 
-		if (this.inCalibrationMode()) {
+		if (ContextManager.inCalibrationMode()) {
+
+			System.out.println(ContextManager.getCalibrationModeData());
+
 			writeSuccessRateLog();
 		}
 
+		// terminate the PostgreSQL logger
+
+		if (ContextManager.getPostgresLogger() != null) {
+			postgresLogger.close();
+		}
+
+
+
+
+
+		System.out.println("Model terminated in " + getModelRunSeconds() + " seconds.");
+
+		emailTool.sendMail("model finished in " + getModelRunSeconds() +  "seconds");
+
+	}
+
+	public static long getModelRunSeconds() {
 		long endTime = System.currentTimeMillis();
-
-
-		// terminate the postgres logger
-		//		this.getPostgresLogger().close();
-
-		postgresLogger.close();
-
-
-
-		System.out.println("Model terminated ... " + (endTime - startTime ) / 1000 + "seconds");
-
-
-		//		emailTool.sendMail("model finished in " + (startTime - endTime) / 1000 + "seconds");
-
+		return (endTime - ContextManager.getCalibrationModeData().getStartTime())  / 1000;
 	}
 
 	/*
 	 * 
 	 */
 	private void writeSuccessRateLog() {
-		ContextManager.getSuccessLogger().logLine(ContextManager.getAngleToDestination()+ ";" + ContextManager.canceledAgents);
+		ContextManager.getCalibrationModeData();
+		ContextManager.getCalibrationModeData();
+		CalibrationModeData.getSuccessLogger().logLine(ContextManager.getAngleToDestination()+ ";" + 
+				ContextManager.getCalibrationModeData().getTotalNumberOfIterations() + ";" + 
+				CalibrationModeData.getCanceledAgents() + ";" + 
+				ContextManager.getModelRunSeconds());
 	}
 
 	public void writeRouteContext() {
@@ -1249,7 +1312,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		URL url = null;
 		try {
-			url = new File(ContextManager.getProperty("dumpRouteFile")).toURL();
+			url = new File(ContextManager.getProperty("dumpRouteFile")).toURI().toURL();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
@@ -1270,7 +1333,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		URL url = null;
 		try {
-			url = new File(ContextManager.getProperty("dumpRoadFile")).toURL();
+			url = new File(ContextManager.getProperty("dumpRoadFile")).toURI().toURL();
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1283,7 +1346,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		URL url = null;
 		try {
-			url = new File(ContextManager.getProperty("dumpDecisionFile")).toURL();
+			url = new File(ContextManager.getProperty("dumpDecisionFile")).toURI().toURL();
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1300,7 +1363,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		schedule.schedule(ScheduleParameters.createOneTime(currentTick + 1, 
 				ScheduleParameters.LAST_PRIORITY, 1), this, 
-				"spawnAgentByCoordinates", startCoordinate, endCoordinate, currentObjectID, matchedGPSRoute);
+				"spawnAgentByCoordinates", getStartCoordinate(), getEndCoordinate(), currentObjectID, getMatchedGPSRoute());
 
 	}
 
@@ -1335,25 +1398,8 @@ public class ContextManager implements ContextBuilder<Object> {
 				System.out.println("agent = null(ContextManager, #1308");
 			} else {
 
-				//				if (cphA.isTerminated()) {
-				//
-				//					// cphA.setTerminated(true);
-				//
-				//					// we write the routes etc into files (shapefile, KML)
-				//					// cphA.writeHistory(this.getModelRunID());
-				//
-				//					// put the route into the routegeography
-				//
-				//					/*
-				//					 * Route route = cphA.getRoute();
-				//					 * ContextManager.getRouteContext().add(route);
-				//					 * */
-				//
-				//					removeAgent(cphA);
-				//
-				//				} else {
 				cphA.step();
-				//				}
+
 			}
 		}
 		System.out.println("TICK " + currentTick + " - " + n + " agents.");
@@ -1372,75 +1418,51 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public void stepCalibrationAgents() throws Exception {
 
-		int currentTick = getCurrentTick();
+		//		int currentTick = getCurrentTick();
+
+		if (ContextManager.isLaunchNextCalibrationAgent()) {
+			nextCalibrationAgent();
+			setLaunchNextCalibrationAgent(false);
+		}
 
 		Iterable<IAgent> agents = agentGeography.getAllObjects();
 
-		//		agents = agentGeography.getAllObjects();
-
 		for (IAgent cphA : agents) {
-
-			System.out.println("(" + ContextManager.getCurrentTick() + ") - A(" + cphA.getID() + ") " + cphA.getPosition());
-
+			if (ContextManager.getDEBUG_MODE()) {
+				System.out.println("(" + ContextManager.getCurrentTick() + ") - A(" + cphA.getID() + "/" + currentObjectID + ") " + cphA.getPosition());
+			}
 			if (cphA.isAtDestination()) {
-
-				// numberOfKills = 0;
 
 				cphA.writeHistory(ContextManager.getModelRunID());
 
 				// remove the agent
 				ContextManager.removeAgent(cphA);
 
-				// decrement the counter
-				setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
+				ContextManager.getCalibrationModeData().incrementSuccessfullyModeledRoutes();
 
-				if (getCalibrationAgentsToModel()>0) {
+				System.out.println("Agent " + cphA.getID() + " at destination.");
 
-					// schedule the next agent
-
-					scheduleNewCalibrationAgent(currentTick);
-
-				} else {
-
-					// spawn the next agent from the stack
-
-					jumpToNextRoute(currentTick);
-					// scheduleNewCalibrationAgent(currentTick);
-				}
+				nextCalibrationAgent();
 
 			} else {
 
 				if (cphA.isMoreThan50PercentOverGPSRouteDistance()) {
 
-					System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + cphA.getID() + ") > 50%");
-
+					if (ContextManager.getDEBUG_MODE()) {
+						System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + cphA.getID() + ") > 50%");
+					}
 					cphA.setDidNotFindDestination(true);
-					this.canceledAgents  +=1;
-					//							System.out.println("MORETHAN50%");
+					ContextManager.getCalibrationModeData().incrementNumberOfCanceledAgents();
 
-					cphA.setTerminated(true);
+//					cphA.setTerminated(true);
 					Route route = cphA.getRoute();
 					ContextManager.getRouteContext().add(route);
 
-					getAgentContext().remove(cphA);
+					ContextManager.removeAgent(cphA);
 
 					setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
 
-					if (getCalibrationAgentsToModel()>0) {
-
-						// schedule the next agent
-
-						scheduleNewCalibrationAgent(currentTick);
-
-					} else {
-
-						// spawn the next agent from the stack
-
-						jumpToNextRoute(currentTick);
-						// scheduleNewCalibrationAgent(currentTick);
-					}
-
-
+					nextCalibrationAgent();
 
 				} else {
 
@@ -1449,25 +1471,7 @@ public class ContextManager implements ContextBuilder<Object> {
 			}
 		}
 	}
-	//	}
-	//			} else {
-	//				cphA.setTerminated(true);
-	//
-	//				// we write the routes etc into files (shapefile, KML)
-	//				// cphA.writeHistory(this.getModelRunID());
-	//
-	//				// put the route into the routegeography
-	//
-	//				Route route = cphA.getRoute();
-	//				ContextManager.getRouteContext().add(route);
-	//
-	//				getAgentContext().remove(cphA);
 
-
-
-
-	//		}
-	//	}
 
 
 	/**
@@ -1477,12 +1481,18 @@ public class ContextManager implements ContextBuilder<Object> {
 	 */
 	public  void jumpToNextRoute(int currentTick) {
 
-		if (matchedGPSRouteStack.size() > 0) {
+		if (getMatchedGPSRouteStack().size() > 0) {
 
-			ContextManager.matchedGPSRoute = matchedGPSRouteStack.pop();
-			ContextManager.resultRouteCoordinates = ContextManager.matchedGPSRouteProjection.getGeometry(this.matchedGPSRoute).getCoordinates();
-			ContextManager.startCoordinate = resultRouteCoordinates[0];
-			ContextManager.endCoordinate = resultRouteCoordinates[resultRouteCoordinates.length-1];
+			ContextManager.setMatchedGPSRoute(getMatchedGPSRouteStack().pop());
+
+			// figure out whether the route is longer than 3 road segments:
+
+			//			int numberOfRoadSegments = ContextManager.getMatchedGPSRoute().getNumberOfEdges();
+
+
+			ContextManager.setResultRouteCoordinates(ContextManager.matchedGPSRouteProjection.getGeometry(ContextManager.getMatchedGPSRoute()).getCoordinates());
+			ContextManager.setStartCoordinate(getResultRouteCoordinates()[0]);
+			ContextManager.setEndCoordinate(getResultRouteCoordinates()[getResultRouteCoordinates().length-1]);
 
 
 			ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
@@ -1490,17 +1500,44 @@ public class ContextManager implements ContextBuilder<Object> {
 			schedule.schedule(ScheduleParameters.createOneTime(currentTick + 1, 
 					ScheduleParameters.LAST_PRIORITY, 1), this, 
 					"spawnAgentByCoordinates", 
-					startCoordinate, 
-					endCoordinate, 
+					getStartCoordinate(), 
+					getEndCoordinate(), 
 					currentObjectID,
-					matchedGPSRoute);
+					getMatchedGPSRoute());
 
 			setCalibrationAgentsToModel(ContextManager.getNumberOfRepetitions());
 
-			currentObjectID = this.matchedGPSRoute.getOBJECTID(); 
+			currentObjectID = ContextManager.getMatchedGPSRoute().getOBJECTID(); 
+
+			System.out.println("(" + getCurrentTick() + ") New agent with riD=" + currentObjectID + " scheduled - " + getMatchedGPSRouteStack().size() + " to go.");
+
+
 		}
 		else {
 			this.terminateModel(currentTick);
+		}
+
+	}
+
+	/**
+	 * spawns the nect agent
+	 */
+	public void nextCalibrationAgent() {
+
+		calibrationAgentsToModel = calibrationAgentsToModel - 1;
+
+		if (getCalibrationAgentsToModel() > 0) {
+
+			// schedule the next agent for the same route
+
+			scheduleNewCalibrationAgent(getCurrentTick());
+
+		} else {
+
+			// spawn the next agent from the stack
+
+			jumpToNextRoute(getCurrentTick());
+			// scheduleNewCalibrationAgent(currentTick);
 		}
 	}
 
@@ -1508,7 +1545,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	public void killAgent(IAgent agent) {
 
 		totalNumberOfKills++;
-		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + matchedGPSRoute.getOBJECTID());
+		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + getMatchedGPSRoute().getOBJECTID());
 		ContextManager.incrementNumberOfKills();
 		getAgentContext().remove(agent);
 	}
@@ -1528,8 +1565,6 @@ public class ContextManager implements ContextBuilder<Object> {
 			System.out.println("DUPLICATES !!!");
 		}
 
-		int cntr = 0;
-
 		Context<IAgent> ac = getAgentContext();
 
 		for (IAgent a : agentsToBeRemoved) {
@@ -1538,18 +1573,9 @@ public class ContextManager implements ContextBuilder<Object> {
 			if ((a!=null) && getAgentContext().contains(a)) {
 
 				if (a.isCalibrationAgent()) {
-					if (numberOfKills==5) {
-
-						System.out.println("More than 5 tries for route " + a.getRoute().getID() + ", everybody got killed. Lets jump to the next route");
-						numberOfKills = 0;
-						jumpToNextRoute(getCurrentTick());
-						// scheduleNewCalibrationAgent(currentTick);
-
-					} else {
-						scheduleNewCalibrationAgent(ContextManager.getCurrentTick());
-					}
 
 					ac.remove(a);
+
 					System.out.println("(" + ContextManager.getCurrentTick() + ") Agent ID=" + a.getID() + " removed.");
 
 				} else {
@@ -1564,7 +1590,6 @@ public class ContextManager implements ContextBuilder<Object> {
 						npe.printStackTrace();
 					}
 					a = null;
-					cntr ++;
 				}
 			}
 		}
@@ -1574,6 +1599,7 @@ public class ContextManager implements ContextBuilder<Object> {
 		//		System.out.println("AFTER " + getAgentContext().getObjects(IAgent.class).size());
 	}
 
+	@SuppressWarnings("unchecked")
 	public void spawnAgents() {
 		ArrayList<IAgent> aTBS = ContextManager.getAgentsToBeSpawned();
 
@@ -1660,7 +1686,10 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		LOGGER.log(Level.FINER, "Loggers terminated.");
 
-		ContextManager.getRoadLoadLogger().dumpWholeDay();
+		RoadLoadLogger roadLogger = ContextManager.getRoadLoadLogger();
+		if (roadLogger != null) {
+			roadLogger.dumpWholeDay();
+		}
 	}
 
 	//	private void setupDecisionLogger() {
@@ -1863,58 +1892,59 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * 
 	 * @throws NoIdentifierException
 	 */
-	private void testEnvironment() throws EnvironmentError, NoIdentifierException {
+	//	private void testEnvironment() throws EnvironmentError, NoIdentifierException {
+	//
+	//		LOGGER.log(Level.FINE, "Testing the environment");
+	//		// Get copies of the contexts/projections from main.resources context
+	//		// Context<Building> bc = (Context<Building>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.BUILDING_CONTEXT);
+	//		// Context<Road> rc = (Context<Road>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.ROAD_CONTEXT);
+	// Context<Junction> jc = (Context<Junction>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.JUNCTION_CONTEXT);
 
-		LOGGER.log(Level.FINE, "Testing the environment");
-		// Get copies of the contexts/projections from main.resources context
-		// Context<Building> bc = (Context<Building>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.BUILDING_CONTEXT);
-		// Context<Road> rc = (Context<Road>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.ROAD_CONTEXT);
-		// Context<Junction> jc = (Context<Junction>) mainContext.getSubContext(GlobalVars.CONTEXT_NAMES.JUNCTION_CONTEXT);
+	// Geography<Building> bg = (Geography<Building>)
+	// bc.getProjection(GlobalVars.CONTEXT_NAMES.BUILDING_GEOGRAPHY);
+	// Geography<Road> rg = (Geography<Road>)
+	// rc.getProjection(GlobalVars.CONTEXT_NAMES.ROAD_GEOGRAPHY);
+	// Geography<Junction> jg = (Geography<Junction>)
+	// rc.getProjection(GlobalVars.CONTEXT_NAMES.JUNCTION_GEOGRAPHY);
+	// Network<Junction> rn = (Network<Junction>) jc.getProjection(GlobalVars.CONTEXT_NAMES.ROAD_NETWORK);
 
-		// Geography<Building> bg = (Geography<Building>)
-		// bc.getProjection(GlobalVars.CONTEXT_NAMES.BUILDING_GEOGRAPHY);
-		// Geography<Road> rg = (Geography<Road>)
-		// rc.getProjection(GlobalVars.CONTEXT_NAMES.ROAD_GEOGRAPHY);
-		// Geography<Junction> jg = (Geography<Junction>)
-		// rc.getProjection(GlobalVars.CONTEXT_NAMES.JUNCTION_GEOGRAPHY);
-		// Network<Junction> rn = (Network<Junction>) jc.getProjection(GlobalVars.CONTEXT_NAMES.ROAD_NETWORK);
+	// 1. Check that there are some objects in each of the contexts
+	// checkSize(bc, rc, jc);
 
-		// 1. Check that there are some objects in each of the contexts
-		// checkSize(bc, rc, jc);
+	//		// 2. Check that the number of roads matches the number of edges
+	//		if (sizeOfIterable(rc.getObjects(Road.class)) != sizeOfIterable(rn.getEdges())) {
+	//			throw new EnvironmentError("There should be equal numbers of roads in the road "
+	//					+ "context and edges in the road network. But there are "
+	//					+ sizeOfIterable(rc.getObjects(Road.class)) + " and " + sizeOfIterable(rn.getEdges()));
+	//		}
+	//
+	//		// 3. Check that the number of junctions matches the number of nodes
+	//		if (sizeOfIterable(jc.getObjects(Junction.class)) != sizeOfIterable(rn.getNodes())) {
+	//			throw new EnvironmentError("There should be equal numbers of junctions in the junction "
+	//					+ "context and nodes in the road network. But there are "
+	//					+ sizeOfIterable(jc.getObjects(Junction.class)) + " and " + sizeOfIterable(rn.getNodes()));
+	//		}
+	//
+	//		LOGGER.log(Level.FINE, "The road network has " + sizeOfIterable(rn.getNodes()) + " nodes and "
+	//				+ sizeOfIterable(rn.getEdges()) + " edges.");
+	//
+	//		// 4. Check that Roads and Buildings have unique identifiers
+	//		HashMap<String, ?> idList = new HashMap<String, Object>();
+	//		for (Building b : bc.getObjects(Building.class)) {
+	//			if (idList.containsKey(b.getIdentifier()))
+	//				throw new EnvironmentError("More than one building found with id " + b.getIdentifier());
+	//			idList.put(b.getIdentifier(), null);
+	//		}
+	//		idList.clear();
+	//		for (Road r : rc.getObjects(Road.class)) {
+	//			if (idList.containsKey(r.getIdentifier()))
+	//				throw new EnvironmentError("More than one building found with id " + r.getIdentifier());
+	//			idList.put(r.getIdentifier(), null);
+	//		}
+	//
+	//	}
 
-		//		// 2. Check that the number of roads matches the number of edges
-		//		if (sizeOfIterable(rc.getObjects(Road.class)) != sizeOfIterable(rn.getEdges())) {
-		//			throw new EnvironmentError("There should be equal numbers of roads in the road "
-		//					+ "context and edges in the road network. But there are "
-		//					+ sizeOfIterable(rc.getObjects(Road.class)) + " and " + sizeOfIterable(rn.getEdges()));
-		//		}
-		//
-		//		// 3. Check that the number of junctions matches the number of nodes
-		//		if (sizeOfIterable(jc.getObjects(Junction.class)) != sizeOfIterable(rn.getNodes())) {
-		//			throw new EnvironmentError("There should be equal numbers of junctions in the junction "
-		//					+ "context and nodes in the road network. But there are "
-		//					+ sizeOfIterable(jc.getObjects(Junction.class)) + " and " + sizeOfIterable(rn.getNodes()));
-		//		}
-		//
-		//		LOGGER.log(Level.FINE, "The road network has " + sizeOfIterable(rn.getNodes()) + " nodes and "
-		//				+ sizeOfIterable(rn.getEdges()) + " edges.");
-		//
-		//		// 4. Check that Roads and Buildings have unique identifiers
-		//		HashMap<String, ?> idList = new HashMap<String, Object>();
-		//		for (Building b : bc.getObjects(Building.class)) {
-		//			if (idList.containsKey(b.getIdentifier()))
-		//				throw new EnvironmentError("More than one building found with id " + b.getIdentifier());
-		//			idList.put(b.getIdentifier(), null);
-		//		}
-		//		idList.clear();
-		//		for (Road r : rc.getObjects(Road.class)) {
-		//			if (idList.containsKey(r.getIdentifier()))
-		//				throw new EnvironmentError("More than one building found with id " + r.getIdentifier());
-		//			idList.put(r.getIdentifier(), null);
-		//		}
-
-	}
-
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static int sizeOfIterable(Iterable i) {
 		int size = 0;
 		Iterator<Object> it = i.iterator();
@@ -2155,7 +2185,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public void setCopenhagenABMTools(CopenhagenABMTools copenhagenABMTools) {
-		this.copenhagenABMTools = copenhagenABMTools;
+		ContextManager.copenhagenABMTools = copenhagenABMTools;
 	}
 
 	public static SnapTool getSnapTool() {
@@ -2238,6 +2268,10 @@ public class ContextManager implements ContextBuilder<Object> {
 		return (getProperty("DecisionLogger").equalsIgnoreCase("ON"));
 	}
 
+	public static boolean isDecisionTextLoggerOn() {
+		return (getProperty("DecisionTextLogger").equalsIgnoreCase("ON"));
+	}
+
 	public static boolean useExperiences() {
 		return (getProperty("UseExperiences").equalsIgnoreCase("ON"));
 	}
@@ -2272,7 +2306,6 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 
-
 	public static boolean getWriteRouteContext() {
 		return getProperty("writeRouteContext").equalsIgnoreCase("ON");
 	}
@@ -2302,7 +2335,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public void setModelRunID(Integer modelRunID) {
-		this.modelRunID = modelRunID;
+		ContextManager.modelRunID = modelRunID;
 	}
 
 	public static Context<Decision> getDecisionContext() {
@@ -2398,9 +2431,32 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	// --------------------------------------------------
 
+	/**
+	 * @return the minimum mnumber of edges a result route has to have in order to be taken
+	 * into consideration for the calibration run. 
+	 */
+	public int getMinEdgeNumberOfEdgesForCalibration() {
+		return new Integer(getProperty("minEdgeNumberOfEdgesForCalibration"));
+	}
 
 	public static boolean isPostgreSQLLoggerOn() {
 		return getProperty("PostgreSQLLogger").equals("ON");
+	}
+
+	public static boolean isBasicAgentLoggerOn() {
+		return getProperty("BasicAgentLogger").equals("ON");
+	}
+
+	public String getNotificationEmailAddress() {
+		return getProperty("notificationEmailAddress");
+	}
+
+	//	returns whether we run in debug mode
+	public static boolean getDEBUG_MODE() {
+		String DM = getProperty("DEBUG_MODE");
+		if (DM != null) {
+			return DM.equals("true");
+		} else return false;
 	}
 
 	public static KillLogger getKillLogger() {
@@ -2443,14 +2499,6 @@ public class ContextManager implements ContextBuilder<Object> {
 		ContextManager.crs = coordinateReferenceSystem;
 	}
 
-	public static SuccessLogger getSuccessLogger() {
-		return successLogger;
-	}
-
-	public static void setSuccessLogger(SuccessLogger successLogger) {
-		ContextManager.successLogger = successLogger;
-	}
-
 	public static void resetCrowdingNetwork() {
 		ContextManager.crowdingNetwork = new RoadNetwork();
 
@@ -2467,6 +2515,64 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public static int getDistanceSnap() {
 		return new Integer(ContextManager.getProperty(GlobalVars.distanceSnap));
+	}
+
+	public static MatchedRouteCache getMatchedRouteCache() {
+		return matchedRouteCache;
+	}
+
+	public static void setMatchedRouteCache(MatchedRouteCache matchedRouteCache) {
+		ContextManager.matchedRouteCache = matchedRouteCache;
+	}
+
+	public static MatchedGPSRoute getMatchedGPSRoute() {
+		return matchedGPSRoute;
+	}
+
+	public static void setMatchedGPSRoute(MatchedGPSRoute matchedGPSRoute) {
+		ContextManager.matchedGPSRoute = matchedGPSRoute;
+	}
+
+	public static Stack<MatchedGPSRoute> getMatchedGPSRouteStack() {
+		return matchedGPSRouteStack;
+	}
+
+	public static void setMatchedGPSRouteStack(Stack<MatchedGPSRoute> matchedGPSRouteStack) {
+		ContextManager.matchedGPSRouteStack = matchedGPSRouteStack;
+	}
+
+	public static Coordinate[] getResultRouteCoordinates() {
+		return resultRouteCoordinates;
+	}
+
+	public static void setResultRouteCoordinates(
+			Coordinate[] resultRouteCoordinates) {
+		ContextManager.resultRouteCoordinates = resultRouteCoordinates;
+	}
+
+	public static Coordinate getStartCoordinate() {
+		return startCoordinate;
+	}
+
+	public static void setStartCoordinate(Coordinate startCoordinate) {
+		ContextManager.startCoordinate = startCoordinate;
+	}
+
+	public static Coordinate getEndCoordinate() {
+		return endCoordinate;
+	}
+
+	public static void setEndCoordinate(Coordinate endCoordinate) {
+		ContextManager.endCoordinate = endCoordinate;
+	}
+
+	public static boolean isLaunchNextCalibrationAgent() {
+		return launchNextCalibrationAgent;
+	}
+
+	public static void setLaunchNextCalibrationAgent(
+			boolean launchNextCalibrationAgent) {
+		ContextManager.launchNextCalibrationAgent = launchNextCalibrationAgent;
 	}
 
 

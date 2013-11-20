@@ -31,8 +31,8 @@ public class CalibrationLogger {
 			return buf.toString() + "\n";
 		}
 		
-		public String getHeader(Handler h) {
-			return "pathSize;angle_to_destination;pathSize;route_ID;nuber_of_edges";
+		public String getHead(Handler h) {
+			return "pathSize;angle_to_destination;route_ID;number_of_edges";
 		}
 		
 		public String getTail(Handler h) {
