@@ -23,21 +23,8 @@ public class SuccessLogger {
 		}
 		
 		public String getHead(Handler h) {
-			return "agentID;angleToDestWeight;totalIterations;successfulIterations;secondsrun\n";
+			return "angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun\n";
 		}
-		
-//		public String getTail(Handler h) {
-//			
-//			return "TAIL";
-////			double sum = 0.0d;
-////			for (double d : pathSizes) {
-////				sum = sum + d;
-////			}
-////			
-////			String[] xx = new Double(sum/pathSizes.size()).toString().split("\\.");
-////			
-////			return "AVG:" + xx[0] + "," + xx[1];
-//		}
 		
 	}
 	

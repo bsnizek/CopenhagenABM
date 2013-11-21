@@ -196,7 +196,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	 * 
 	 */
 
-	private static KillLogger killLogger = new KillLogger();
+//	private static KillLogger killLogger = new KillLogger();
 
 	/**
 	 * 
@@ -997,12 +997,12 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		// let us initialize the kill logger
 
-		try {
-			killLogger.setup();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			killLogger.setup();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		// lets create the schedule
 		createSchedule();
@@ -1291,7 +1291,8 @@ public class ContextManager implements ContextBuilder<Object> {
 	private void writeSuccessRateLog() {
 		ContextManager.getCalibrationModeData();
 		ContextManager.getCalibrationModeData();
-		CalibrationModeData.getSuccessLogger().logLine(ContextManager.getAngleToDestination()+ ";" + 
+		CalibrationModeData.getSuccessLogger().logLine(ContextManager.getAngleToDestination() + ";" + 
+				ContextManager.omitDecisionMatrixMultifields() + ";" + 
 				ContextManager.getCalibrationModeData().getTotalNumberOfIterations() + ";" + 
 				CalibrationModeData.getCanceledAgents() + ";" + 
 				ContextManager.getModelRunSeconds());
@@ -1545,7 +1546,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	public void killAgent(IAgent agent) {
 
 		totalNumberOfKills++;
-		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + getMatchedGPSRoute().getOBJECTID());
+//		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + getMatchedGPSRoute().getOBJECTID());
 		ContextManager.incrementNumberOfKills();
 		getAgentContext().remove(agent);
 	}
@@ -2382,21 +2383,13 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public static String getSuccessloggerFile() {
-		return "log/successlog.txt-" + ContextManager.getAngleToDestination() + "-" + ContextManager.omitDecisionMatrixMultifields() + ".txt";
+		return "log/successlog.txt";
 	}
 
 
 	public static String getKillLoggerFile() {
 		return getProperty("KillLoggerFile");
 	}
-
-	//	public static SimpleLoadLogger getSimpleLoadLogger() {
-	//		return simpleLoadLogger;
-	//	}
-	//
-	//	public static void setSimpleLoadLogger(SimpleLoadLogger simpleLoadLogger) {
-	//		ContextManager.simpleLoadLogger = simpleLoadLogger;
-	//	}
 
 	public static String getSimpleLoadLoggerFile() {
 		return getProperty("SimpleLoadLoggerFileName");
@@ -2459,13 +2452,13 @@ public class ContextManager implements ContextBuilder<Object> {
 		} else return false;
 	}
 
-	public static KillLogger getKillLogger() {
-		return killLogger;
-	}
-
-	public static void setKillLogger(KillLogger killLogger) {
-		ContextManager.killLogger = killLogger;
-	}
+//	public static KillLogger getKillLogger() {
+//		return killLogger;
+//	}
+//
+//	public static void setKillLogger(KillLogger killLogger) {
+//		ContextManager.killLogger = killLogger;
+//	}
 
 	public static void setAgentContext(Context<IAgent> agentContext) {
 		ContextManager.agentContext = agentContext;

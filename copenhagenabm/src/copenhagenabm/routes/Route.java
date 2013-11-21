@@ -13,6 +13,7 @@ import repastcity3.exceptions.NoIdentifierException;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
 
 import copenhagenabm.environment.FixedGeography;
 import copenhagenabm.environment.Road;
@@ -110,7 +111,16 @@ public class Route implements FixedGeography {
 	public ArrayList<LineString> getRouteAsLineStringList() {
 		ArrayList<LineString> a = new ArrayList<LineString>();
 		for (Geometry m : this.edgeList) {
-			a.add(fact.createLineString(m.getCoordinates()));
+			if (m.getClass() == MultiLineString.class) {
+				MultiLineString mLs = (MultiLineString) m;
+				int numGeometries = mLs.getNumGeometries();
+				for (int i=0;i< numGeometries; i++) {
+					Coordinate[] g = mLs.getGeometryN(i).getCoordinates();
+					a.add(fact.createLineString(g));
+				}
+
+			} else
+				a.add(fact.createLineString(m.getCoordinates()));
 		}
 		return a;
 	}
@@ -124,13 +134,35 @@ public class Route implements FixedGeography {
 	}
 
 	public LineString getRouteAsLineString() {
+
 		ArrayList<LineString> edges = getRouteAsLineStringList();
+
+		int cntr = 0;
+
+		boolean GO = true;
+
+		if (edges.size()>0)
+			GO = false;
+
+		// edges is still empty, we hack a little 
+		while(GO) {
+			edges = getRouteAsLineStringList();
+			if (edges.size()>0 && cntr==5) 
+				GO = false;
+			if (cntr==5) {
+				edges = getRouteAsLineStringList();
+				return null;
+			}
+			cntr = cntr + 1;
+		}
+
+
 
 		if (edges.size()>1) {
 
 			// let us kick out duplicates in the beginning of the edge list
-			boolean GO = edges.get(0).equals(edges.get(1));
-			while (GO) {
+			boolean GOGO = edges.get(0).equals(edges.get(1));
+			while (GOGO) {
 				edges.remove(0);
 				roadList.remove(0);
 				edgeList.remove(0);
@@ -138,9 +170,9 @@ public class Route implements FixedGeography {
 					System.out.println("removed a duplicate edge from the beginning of a edge list");
 				}
 				if ((edges.size()>1) && edges.get(0).equals(edges.get(1)))
-					GO=true;
+					GOGO=true;
 				else 
-					GO=false;
+					GOGO=false;
 			}
 
 			if (edges.size()>1) {
@@ -279,8 +311,12 @@ public class Route implements FixedGeography {
 
 		}
 
+		if (edges.size()==0) {
+			System.out.println("edges.size() = 0");
+		}
+
 		return edges.get(0);
-		
+
 	}
 
 	private LineString createLineStringFromCoordinateArray(ArrayList<Coordinate> cc) {
@@ -630,7 +666,7 @@ public class Route implements FixedGeography {
 		this.edgeList.remove(this.edgeList.size()-1);
 
 	}
-	
+
 	public String getRouteSegmentIDsAsString() {
 		String id = "";
 		String s = "(";
@@ -641,14 +677,14 @@ public class Route implements FixedGeography {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			s = s + "'" + id + "',";
-			
+
 		}
-		
+
 		return s.substring(0,s.length()-1) + ")";
 	}
-	
+
 	public ArrayList<String> getEdgeIDs() {
 		ArrayList<String> a = new ArrayList<String>();
 		for (Road road : this.getRouteAdsRoadList()) {
@@ -661,7 +697,7 @@ public class Route implements FixedGeography {
 		}
 		return a;
 	}
-	
+
 	public String toString() {
 		return "Route ID=" + this.getGPSID() + " n=" + this.edgeList.size()  + " l=" + getLength() + " \"identifier\" IN " + getRouteSegmentIDsAsString();
 	}
