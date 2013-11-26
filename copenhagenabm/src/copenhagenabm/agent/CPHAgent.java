@@ -39,6 +39,8 @@ import copenhagenabm.loggers.AgentDotLogger;
 import copenhagenabm.loggers.BasicAgentLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
 import copenhagenabm.main.AGENT_SPEED_MODES;
+import copenhagenabm.main.CalibrationModeData;
+import copenhagenabm.main.CalibrationModeData.CalibrationRoute;
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.main.GlobalVars;
 import copenhagenabm.routes.MatchedGPSRoute;
@@ -190,6 +192,8 @@ public class CPHAgent implements IAgent {
 	// a list of IDs of the roads visited
 	private ArrayList<String> RoadHistory = new ArrayList<String>();
 
+	private CalibrationModeData.CalibrationRoute calibrationRoute;
+
 	public ArrayList<String> getRoadHistory() {
 		return RoadHistory;
 	}
@@ -294,9 +298,11 @@ public class CPHAgent implements IAgent {
 		this.id = uniqueID++;
 		this.gpsRouteID = GPSID;
 		this.setRoute(new Route(this.id, GPSID, ContextManager.getModelRunID()));		// initialize the route and set the GPS ID = the ID of the route tracked by GPS
-		this.isCalibrationAgent=true;						// yes, we have an explicative agent
+		this.isCalibrationAgent=true;	// yes, we have a calibration agent
 		this.matchedGPSRoute = matchedGPSRoute;
-
+		double totLengthGPSRoute = matchedGPSRoute.getLengthInMetres();
+		CalibrationModeData cmd = new CalibrationModeData() ;
+		this.calibrationRoute = cmd.new CalibrationRoute(sourceCoord, destinationCoord, GPSID, totLengthGPSRoute);
 	}
 
 	/**
@@ -811,7 +817,7 @@ public class CPHAgent implements IAgent {
 		try {
 
 
-			String idtfr = currentRoad.getIdentifier();
+//			String idtfr = currentRoad.getIdentifier();
 
 			//			System.out.println("(" + ContextManager.getCurrentTick() + ") currentroad = " + idtfr);
 
@@ -819,13 +825,7 @@ public class CPHAgent implements IAgent {
 				currentRoad = currentRoad.getParentRoad();
 			}
 		} catch (NoIdentifierException e) {
-			// e.printStackTrace();
-			try {
-				String idtfr = currentRoad.getIdentifier();
-			} catch (NoIdentifierException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			 e.printStackTrace();
 		}
 
 		return currentRoad;
@@ -962,6 +962,20 @@ public class CPHAgent implements IAgent {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void finishCalibrationRoute(boolean b) {
+		if (b) {
+			this.calibrationRoute.setSuccessful(true);
+		} 
+			
+		ContextManager.getCalibrationModeData().addCalibrationRoute(this.getCalibrationRoute());
+
+	}
+
+	private CalibrationRoute getCalibrationRoute() {
+		return this.calibrationRoute;
 	}
 
 	//	// returns a list of edge IDs the agent has run on 

@@ -107,4 +107,6 @@ public interface IAgent {
 	public boolean isCalibrationAgent();
 	
 	public MatchedGPSRoute getMatchedGPSRoute();
+
+	public void finishCalibrationRoute(boolean b);
 }

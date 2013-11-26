@@ -1,7 +1,6 @@
 package copenhagenabm.agent;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Point;
 
 import repastcity3.environment.Junction;
 import repastcity3.exceptions.NoIdentifierException;

@@ -293,7 +293,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private ArrayList<copenhagenabm.environment.MatrixReader.Spawn> spawns;
 
-	GeometryFactory geomFac = new GeometryFactory();
+	static GeometryFactory geomFac = new GeometryFactory();
 
 	private static SpatialIndex roadSpatialIndex; // the spatial index for the road network
 
@@ -892,6 +892,9 @@ public class ContextManager implements ContextBuilder<Object> {
 	private void buildCalibrationModel(String gisDataDir) {
 
 		ContextManager.calibrationModeData = new CalibrationModeData();
+		
+		calibrationModeData.setAngleToDestWeight(ContextManager.getAngleToDestination());
+		calibrationModeData.setOmitDecisionMatrixMultifields(ContextManager.omitDecisionMatrixMultifields());
 
 		ContextManager.getCalibrationModeData().setStartTime(System.currentTimeMillis());
 
@@ -1261,7 +1264,16 @@ public class ContextManager implements ContextBuilder<Object> {
 
 			System.out.println(ContextManager.getCalibrationModeData());
 
-			writeSuccessRateLog();
+			// writeSuccessRateLog();
+			
+			ContextManager.getCalibrationModeData().setRunTime(getModelRunSeconds());
+			
+			ContextManager.getCalibrationModeData().log_success();
+			
+			ContextManager.getCalibrationModeData().logCalibrationRoutes();
+			
+			ContextManager.getCalibrationModeData().closeCalibrationRouteLogger();
+			
 		}
 
 		// terminate the PostgreSQL logger
@@ -1269,6 +1281,8 @@ public class ContextManager implements ContextBuilder<Object> {
 		if (ContextManager.getPostgresLogger() != null) {
 			postgresLogger.close();
 		}
+		
+		
 
 
 
@@ -1435,6 +1449,8 @@ public class ContextManager implements ContextBuilder<Object> {
 			if (cphA.isAtDestination()) {
 
 				cphA.writeHistory(ContextManager.getModelRunID());
+				
+				cphA.finishCalibrationRoute(true);
 
 				// remove the agent
 				ContextManager.removeAgent(cphA);
@@ -2566,6 +2582,18 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static void setLaunchNextCalibrationAgent(
 			boolean launchNextCalibrationAgent) {
 		ContextManager.launchNextCalibrationAgent = launchNextCalibrationAgent;
+	}
+
+	public static GeometryFactory getGeomFac() {
+		return geomFac;
+	}
+
+	public void setGeomFac(GeometryFactory geomFac) {
+		this.geomFac = geomFac;
+	}
+
+	public static boolean isCalibrationRouteLoggerOn() {
+		return true; //TODO: yeah;
 	}
 
 

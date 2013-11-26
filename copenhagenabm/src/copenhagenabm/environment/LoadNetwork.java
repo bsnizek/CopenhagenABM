@@ -14,7 +14,7 @@ import org.geotools.data.FileDataStoreFactorySpi;
 import org.geotools.data.Transaction;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.indexed.IndexedShapefileDataStoreFactory;
-import org.geotools.factory.FactoryConfigurationError;
+
 import org.geotools.feature.AttributeType;
 import org.geotools.feature.AttributeTypeFactory;
 import org.geotools.feature.DefaultAttributeTypeFactory;
@@ -26,10 +26,9 @@ import org.geotools.feature.FeatureTypeBuilder;
 import org.geotools.feature.IllegalAttributeException;
 import org.geotools.feature.SchemaException;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
+
 import com.vividsolutions.jts.geom.MultiLineString;
 
 import copenhagenabm.main.ContextManager;
@@ -80,7 +79,8 @@ public class LoadNetwork {
 		}
 	}
 
-	public void dump() throws NoIdentifierException, FactoryConfigurationError, SchemaException, IllegalAttributeException, IOException {
+	@SuppressWarnings("unchecked")
+	public void dump() throws NoIdentifierException, SchemaException, IllegalAttributeException, IOException {
 
 		// get hold of the road context
 		Context<Road> roadContext = ContextManager.getRoadContext();
@@ -103,7 +103,7 @@ public class LoadNetwork {
 		DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
 
 		ShapefileDataStore store = (ShapefileDataStore) factory.createNewDataStore(map);
-		store.forceSchemaCRS(crs); // TODO: maybe one should not hardcode this one ? 
+		store.forceSchemaCRS(crs);
 
 		FeatureType type = getFeatureType();
 

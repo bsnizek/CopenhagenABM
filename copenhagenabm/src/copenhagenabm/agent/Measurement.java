@@ -7,7 +7,8 @@ import com.vividsolutions.jts.geom.Point;
 
 
 /**
- * A measurement is snapshot of the agent's values at a certain time in a certain location
+ * A measurement is a snapshot of the agent's values at a certain 
+ * time in a certain location
  * 
  * 
  * @author besn
@@ -120,12 +121,11 @@ public class Measurement {
 	}
 
 	public double getSpeed() {
-		// TODO Auto-generated method stub
 		return speed;
 	}
 	
 	public void setSpeed(double speed) {
-		speed = speed;
+		this.speed = speed;
 	}
 	
 	

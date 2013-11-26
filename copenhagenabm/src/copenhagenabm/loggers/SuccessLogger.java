@@ -9,10 +9,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 //import copenhagenabm.loggers.CalibrationLogger.SimpleTextFormatter;
+import copenhagenabm.main.CalibrationModeData;
 import copenhagenabm.main.ContextManager;
 
 public class SuccessLogger {
-	
+
 	class SimpleTextFormatter extends Formatter {
 
 		@Override
@@ -21,17 +22,17 @@ public class SuccessLogger {
 			buf.append(formatMessage(rec));
 			return buf.toString() + "\n";
 		}
-		
+
 		public String getHead(Handler h) {
 			return "angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun\n";
 		}
-		
+
 	}
-	
+
 	private final static Logger LOGGER = Logger.getLogger(SuccessLogger.class.getName());
 	private SimpleTextFormatter simpleTextFormatter;
 	private FileHandler fileTxt;
-	
+
 	public void setup() throws IOException {
 		LOGGER.setLevel(Level.INFO);
 		fileTxt = new FileHandler(ContextManager.getSuccessloggerFile(), true);
@@ -40,9 +41,19 @@ public class SuccessLogger {
 		LOGGER.addHandler(fileTxt);
 		LOGGER.setUseParentHandlers(false);
 	}
-	
-	 public void logLine(String line) {
-		 LOGGER.info(line);
-	 }
+
+	public void logLine(String line) {
+		LOGGER.info(line);
+	}
+
+	public void log(CalibrationModeData calibrationModeData) {
+		LOGGER.info(calibrationModeData.getAngleToDestWeight() + ";" + 
+				calibrationModeData.isOmitDecisionMatrixMultifields() + ";" +
+				calibrationModeData.getTotalNumberOfIterations() + ";" + 
+				calibrationModeData.getSuccessfullyModeledRoutes() + ";" + 
+				calibrationModeData.getRunTime()
+
+				);
+	}
 
 }

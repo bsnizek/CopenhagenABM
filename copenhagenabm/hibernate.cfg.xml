@@ -47,6 +47,8 @@
 		
 		<mapping resource="copenhagenabm/orm/Route.hbm.xml"/>
 		
+		<mapping resource="copenhagenabm/orm/CalibrationRouteDBObject.hbm.xml"/>
+		
 	</session-factory>
 
 

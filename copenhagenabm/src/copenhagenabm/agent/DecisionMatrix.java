@@ -126,9 +126,6 @@ public class DecisionMatrix {
 
 			probability = Math.exp(sumWij) / s; 
 
-			// TODO remove
-			//probability = sumWij;
-
 		}
 
 		public double getProbj() {
@@ -281,11 +278,8 @@ public class DecisionMatrix {
 
 						Double d = new Double(cell.value);
 
-						if (d!=null) {
-							line = line + DF.format(d) + TAB;
-						} else {
-							line = line + "null" + TAB;
-						}
+						line = line + DF.format(d) + TAB;
+						
 					} else 
 					{
 						line = line + "null" + TAB;
