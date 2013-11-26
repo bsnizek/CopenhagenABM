@@ -32,7 +32,7 @@ public class CalibrationLogger {
 		}
 		
 		public String getHead(Handler h) {
-			return "pathSize;angle_to_destination;route_ID;number_of_edges";
+			return "pathSize;angle_to_destination;route_ID;number_of_edges\n";
 		}
 		
 		public String getTail(Handler h) {

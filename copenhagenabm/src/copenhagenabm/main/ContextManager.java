@@ -1276,7 +1276,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		System.out.println("Model terminated in " + getModelRunSeconds() + " seconds.");
 
-		emailTool.sendMail("model finished in " + getModelRunSeconds() +  "seconds");
+		emailTool.sendMail("The model finished in " + getModelRunSeconds() +  " seconds");
 
 	}
 

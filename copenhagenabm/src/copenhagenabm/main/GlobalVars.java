@@ -26,6 +26,7 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * 
  * @author Bernhard Snizek
+ * ©Copyright 2012, 2013 Bernhard Snizek, besn@life.ku.dk, +45 23 71 00 46
  *
  */
 public abstract class GlobalVars {
@@ -44,7 +45,7 @@ public abstract class GlobalVars {
 		public static final double E_HOJ = -1.2553576d;
 		public static final double E_BUT = -1.021367d;
 
-		public static final double ANGLE_TO_DESTINATION = 0.0d;
+		public static final double ANGLE_TO_DESTINATION = 0.7d;
 		public static final double AVOID_U_TURN = 0.0d;
 		public static final boolean EXCEPT_U_TURN = true;
 		
