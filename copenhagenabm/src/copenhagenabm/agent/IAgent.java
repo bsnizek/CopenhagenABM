@@ -23,6 +23,7 @@ import java.util.List;
 import com.vividsolutions.jts.geom.Coordinate;
 
 import copenhagenabm.environment.Road;
+import copenhagenabm.main.CalibrationModeData.CalibrationRoute;
 import copenhagenabm.routes.MatchedGPSRoute;
 import copenhagenabm.routes.Route;
 
@@ -109,4 +110,6 @@ public interface IAgent {
 	public MatchedGPSRoute getMatchedGPSRoute();
 
 	public void finishCalibrationRoute(boolean b);
+	
+	public CalibrationRoute getCalibrationRoute();
 }

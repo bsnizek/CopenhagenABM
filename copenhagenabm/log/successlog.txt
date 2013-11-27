@@ -1,3 +1,23 @@
 angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
 angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
 
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;12680;0;1512
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;12680;0;275
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;58
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;58
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;73
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;72
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;77
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;75
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+0.7;true;1268;0;74

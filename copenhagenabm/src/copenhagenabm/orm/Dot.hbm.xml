@@ -19,10 +19,12 @@
         <property name="geom" type="org.hibernatespatial.postgis.PGGeometryUserType"  column="geom"/>
 	</class>
 	
+	<!-- 
 	<database-object> 
     	<create>DELETE FROM dot</create> 
         <drop></drop> 
         <dialect-scope name="org.hibernatespatial.postgis.PostgisDialect" /> 
    	</database-object>
+   	-->
 	
 </hibernate-mapping>

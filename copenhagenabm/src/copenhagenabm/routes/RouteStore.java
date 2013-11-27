@@ -14,7 +14,6 @@ import com.vividsolutions.jts.geom.LineString;
 
 import copenhagenabm.environment.Road;
 import copenhagenabm.main.ContextManager;
-import copenhagenabm.tools.SnapTool.ReturnArray;
 import gnu.trove.TIntProcedure;
 
 /**

@@ -6,10 +6,6 @@ import java.util.List;
 
 import repastcity3.exceptions.NoIdentifierException;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.planargraph.DirectedEdge;
-import com.vividsolutions.jts.planargraph.Edge;
-
 import copenhagenabm.environment.Road;
 
 /*

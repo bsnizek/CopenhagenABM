@@ -12,7 +12,6 @@ import com.vividsolutions.jts.geom.Point;
 import repast.simphony.context.Context;
 import repastcity3.environment.Building;
 import copenhagenabm.main.ContextManager;
-import copenhagenabm.tools.CopenhagenABMTools;
 import copenhagenabm.tools.SnapTool;
 
 public class SimpleNearestRoadCoordinateCache {
@@ -35,9 +34,6 @@ public class SimpleNearestRoadCoordinateCache {
 		}
 	}
 
-	// private GeometryFactory gfact = new GeometryFactory();  // the geometry factory
-
-	// TODO: throw into property file
 	private static final int kNearestEdgeDistance = 10000;
 
 	//CopenhagenABMTools copenhagenABMTools = new CopenhagenABMTools();

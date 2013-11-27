@@ -974,8 +974,13 @@ public class CPHAgent implements IAgent {
 
 	}
 
-	private CalibrationRoute getCalibrationRoute() {
+	public CalibrationRoute getCalibrationRoute() {
 		return this.calibrationRoute;
+	}
+
+	public void setCalibrationRoute(
+			CalibrationModeData.CalibrationRoute calibrationRoute) {
+		this.calibrationRoute = calibrationRoute;
 	}
 
 	//	// returns a list of edge IDs the agent has run on 

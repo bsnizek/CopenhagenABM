@@ -2,15 +2,16 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="copenhagenabm.orm">
-
 	<class name="CalibrationRouteDBObject" table="calibrationroute">
-
-		<property name="geom"
-			type="org.hibernatespatial.postgis.PGGeometryUserType" column="geom" />
 
 		<id name="ID" column="ID">
 			<generator class="native" />
 		</id>
+
+		<property name="geom"
+			type="org.hibernatespatial.postgis.PGGeometryUserType" column="geom" />
+
+
 
 		<property name="matchedRouteID" type="integer" />
 		
@@ -24,7 +25,7 @@
 		
 		<property name="route_gps_lngth" type="double" />
 		
-		<property name="route_gps_lngth" type="double" />
+		<property name="route_sim_lngth" type="double" />
 		
 		<property name="origin" type="org.hibernatespatial.postgis.PGGeometryUserType" />
 		

@@ -27,6 +27,18 @@ public class Route {
 	public LineString getGeom() {
 		return geom;
 	}
+	
+	
+	@Column(name="id")
+	@Id
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
 
 	public void setGeom(LineString geom) {
 		this.geom = geom;
@@ -58,11 +70,6 @@ public class Route {
 		this.setGeom(line);
 		
 	}
-	
-	@Column(name="id")
-	@Id
-	public int getId() {
-		return id;
-	}
+
 
 }

@@ -140,6 +140,7 @@ public class NearestRoadCoordCache implements Serializable {
 
 			if (thisDist < minDist) {
 				minDist = thisDist;
+				@SuppressWarnings("deprecation")
 				Coordinate[] closestPoints = distOp.closestPoints();
 				// Two coordinates returned by closestPoints(), need to find the
 				// one which isn''t the coord parameter

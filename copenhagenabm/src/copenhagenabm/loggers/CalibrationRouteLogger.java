@@ -16,6 +16,10 @@ public class CalibrationRouteLogger {
 	Session session = null;
 	SessionFactory sf = null;
 
+	public CalibrationRouteLogger() {
+		setup();
+	}
+	
 	public void setup() {
 		sf = HibernateUtil.getSessionFactory();
 		session = sf.getCurrentSession();
@@ -33,7 +37,12 @@ public class CalibrationRouteLogger {
 
 	public void close() {
 		if (ContextManager.isCalibrationRouteLoggerOn()) {
+			try {
 			session.getTransaction().commit();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			System.out.println("CalibrationRouteLog commited and closed.");
 		}
 	}
 
@@ -45,8 +54,6 @@ public class CalibrationRouteLogger {
 
 		session = sf.getCurrentSession();
 		session.beginTransaction();	
-
-		//		System.out.println("commited");
 
 	}
 

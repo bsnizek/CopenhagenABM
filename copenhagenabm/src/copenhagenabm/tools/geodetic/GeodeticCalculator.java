@@ -335,9 +335,9 @@ public class GeodeticCalculator {
                                             DefaultEllipsoidalCS.GEODETIC_2D);
         }
         if (crs instanceof CompoundCRS) {
-            final List components = ((CompoundCRS) crs).getCoordinateReferenceSystems();
-            for (final Iterator it=components.iterator(); it.hasNext();) {
-                final GeographicCRS candidate = getGeographicCRS((CoordinateReferenceSystem) it.next());
+            final List<CompoundCRS> components = ((CompoundCRS) crs).getCoordinateReferenceSystems();
+            for (final Iterator<CompoundCRS> it=components.iterator(); it.hasNext();) {
+                final GeographicCRS candidate = getGeographicCRS(it.next());
                 if (candidate != null) {
                     return candidate;
                 }

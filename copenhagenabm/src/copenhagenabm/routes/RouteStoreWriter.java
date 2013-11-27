@@ -125,7 +125,6 @@ public class RouteStoreWriter {
 		}
 		
 		for (Integer routeID : routeIDs) {
-			MatchedGPSRoute route = matchedGPSRoutes.get(routeID);
 			System.out.println(routeID + " :: " + this.routeStore.getAveragePathSizeAttr().get(routeID));
 		}
 		

@@ -105,7 +105,6 @@ import repastcity3.exceptions.ParameterNotFoundException;
 import copenhagenabm.loggers.BasicAgentLogger;
 import copenhagenabm.loggers.CalibrationLogger;
 import copenhagenabm.loggers.DecisionTextLogger;
-import copenhagenabm.loggers.KillLogger;
 import copenhagenabm.loggers.PostgresLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
 //import copenhagenabm.loggers.SimpleLoadLogger;
@@ -1299,18 +1298,18 @@ public class ContextManager implements ContextBuilder<Object> {
 		return (endTime - ContextManager.getCalibrationModeData().getStartTime())  / 1000;
 	}
 
-	/*
-	 * 
-	 */
-	private void writeSuccessRateLog() {
-		ContextManager.getCalibrationModeData();
-		ContextManager.getCalibrationModeData();
-		CalibrationModeData.getSuccessLogger().logLine(ContextManager.getAngleToDestination() + ";" + 
-				ContextManager.omitDecisionMatrixMultifields() + ";" + 
-				ContextManager.getCalibrationModeData().getTotalNumberOfIterations() + ";" + 
-				CalibrationModeData.getCanceledAgents() + ";" + 
-				ContextManager.getModelRunSeconds());
-	}
+//	/*
+//	 * 
+//	 */
+//	private void writeSuccessRateLog() {
+//		ContextManager.getCalibrationModeData();
+//		ContextManager.getCalibrationModeData();
+//		CalibrationModeData.getSuccessLogger().logLine(ContextManager.getAngleToDestination() + ";" + 
+//				ContextManager.omitDecisionMatrixMultifields() + ";" + 
+//				ContextManager.getCalibrationModeData().getTotalNumberOfIterations() + ";" + 
+//				CalibrationModeData.getCanceledAgents() + ";" + 
+//				ContextManager.getModelRunSeconds());
+//	}
 
 	public void writeRouteContext() {
 
@@ -1471,11 +1470,11 @@ public class ContextManager implements ContextBuilder<Object> {
 					cphA.setDidNotFindDestination(true);
 					ContextManager.getCalibrationModeData().incrementNumberOfCanceledAgents();
 
-//					cphA.setTerminated(true);
 					Route route = cphA.getRoute();
 					ContextManager.getRouteContext().add(route);
 
 					ContextManager.removeAgent(cphA);
+					
 
 					setCalibrationAgentsToModel(getCalibrationAgentsToModel() - 1);
 
@@ -1609,6 +1608,12 @@ public class ContextManager implements ContextBuilder<Object> {
 					a = null;
 				}
 			}
+			
+			// If we are in the calibration mode add the calibration route to the logger 
+			if (ContextManager.inCalibrationMode()) {
+				ContextManager.getCalibrationModeData().addCalibrationRoute(a.getCalibrationRoute());
+			}
+			
 		}
 
 		agentsToBeRemoved = new ArrayList<IAgent>();
@@ -2317,6 +2322,10 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static boolean logToDecisionTextLogger() {
 		return getProperty("DecisionTextLogger").equalsIgnoreCase("ON");
 	}
+	
+	public static boolean isCalibrationRouteLoggerOn() {
+		return getProperty("CalibrationRouteLogger").equalsIgnoreCase("ON");
+	}
 
 	public static CalibrationLogger getCalibrationLogger() {
 		return calibrationLogger;
@@ -2589,12 +2598,10 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public void setGeomFac(GeometryFactory geomFac) {
-		this.geomFac = geomFac;
+		ContextManager.geomFac = geomFac;
 	}
 
-	public static boolean isCalibrationRouteLoggerOn() {
-		return true; //TODO: yeah;
-	}
+
 
 
 }
