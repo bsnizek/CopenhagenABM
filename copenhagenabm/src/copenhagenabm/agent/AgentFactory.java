@@ -65,11 +65,11 @@ public class AgentFactory {
 	 * used for explicative agents that are born in a coodinate and die in one
 	 * 
 	 */
-	public CPHAgent createAgent(Coordinate from, Coordinate to, int sourceRouteID, MatchedGPSRoute matchedGPSRoute) {
+	public CPHAgent createAgent(Coordinate from, Coordinate to, int sourceRouteID, MatchedGPSRoute matchedGPSRoute, int nIter) {
 		
 		ContextManager.incrementAgentCounter();
 
-		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute); // Create a new agent
+		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute, nIter); // Create a new agent
 		ContextManager.addAgentToContext(a);  // add it to the context
 		a.snapAgentToRoad();
 

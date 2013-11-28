@@ -11,9 +11,7 @@
 		<property name="geom"
 			type="org.hibernatespatial.postgis.PGGeometryUserType" column="geom" />
 
-
-
-		<property name="matchedRouteID" type="integer" />
+		<property name="matchedrouteid" type="integer" />
 		
 		<property name="n_iter" type="integer" />
 		

@@ -112,4 +112,19 @@ public interface IAgent {
 	public void finishCalibrationRoute(boolean b);
 	
 	public CalibrationRoute getCalibrationRoute();
+
+	public void setSuccessful(boolean b);
+	
+	public boolean isSuccessful();
+
+	public void calcOverlap();
+	
+	public double getOverlap();
+
+	/**
+	 * completes the calibration route data
+	 */
+	public void finishCalibrationData();
+
+	public void setDeathLocation(Coordinate position);
 }

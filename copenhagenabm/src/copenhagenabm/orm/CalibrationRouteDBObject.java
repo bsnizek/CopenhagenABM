@@ -45,12 +45,34 @@ public class CalibrationRouteDBObject {
 	private Point death;
 	private double calctime;
 
-	private GeometryFactory geomFact;
+	private GeometryFactory geomFact = ContextManager.getGeomFac();
 	
 	
+	/**
+	 * CalibrationRouteDBObject
+	 * 
+	 * An object in the calibrationroute table.
+	 * Instantiate it with a CalibrationRoute which is stored in the agents CalibrationModeData.
+	 * 
+	 * @param c
+	 */
 	public CalibrationRouteDBObject(CalibrationRoute c) {
-		geomFact = ContextManager.getGeomFac();
+		
+		this.geom = c.getRoute();
+
+		this.matchedRouteID = c.getGPSRouteID();
+		this.n_iter = c.getnIter();
+		this.success = c.isSuccessful();
+		this.overlap = c.getOverlap();
+		this.route_gps_lngth = c.getRoute_gps_lngth();
+		this.route_sim_lngth = c.getRoute().getLength();
+		
+		this.origin = geomFact.createPoint(c.getOrigin());
+		this.destination = geomFact.createPoint(c.getDestination());
 		this.death = geomFact.createPoint(c.getDeath());
+		
+		
+		
 		
 		// TODO: *** more fields here
 		
@@ -77,11 +99,11 @@ public class CalibrationRouteDBObject {
 	}
 	
 	@Column(name="matchedrouteid")
-	public int getMatchedRouteID() {
+	public int getMatchedrouteid() {
 		return matchedRouteID;
 	}
 	
-	public void setMatchedRouteID(int matchedRouteID) {
+	public void setMatchedrouteid(int matchedRouteID) {
 		this.matchedRouteID = matchedRouteID;
 	}
 	

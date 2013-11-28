@@ -3,7 +3,9 @@ package copenhagenabm.main;
 import java.util.ArrayList;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
 
+import copenhagenabm.agent.IAgent;
 import copenhagenabm.loggers.CalibrationRouteLogger;
 import copenhagenabm.loggers.SuccessLogger;
 
@@ -20,7 +22,7 @@ import copenhagenabm.loggers.SuccessLogger;
 public class CalibrationModeData {
 	
 	/**
-	 * The data of a calibration route
+	 * The data of a calibration route.
 	 * 
 	 * 
 	 * @author besn
@@ -28,19 +30,26 @@ public class CalibrationModeData {
 	 */
 	public class CalibrationRoute {
 		
+		private LineString route;
 		private Coordinate origin;
 		private Coordinate destination;
-		private Coordinate death;
+		private Coordinate death = new Coordinate(0,0);
 		
 		private int GPSRouteID;
 		private double route_gps_lngth;
 		private boolean successful;
+		private int nIter;
+		private double overlap;
 
-		public CalibrationRoute(Coordinate origin, Coordinate destination, int GPSRouteID, double route_gps_lngth) {
+		public CalibrationRoute(IAgent agent, Coordinate origin, Coordinate destination, int GPSRouteID, double route_gps_lngth, int nIter) {
+			
 			this.origin = origin;
 			this.destination = destination;
 			this.GPSRouteID = GPSRouteID;
 			this.route_gps_lngth = route_gps_lngth;
+			this.nIter = nIter;
+			this.successful = agent.isSuccessful();
+			this.overlap = agent.getOverlap();
 		}
 
 		public Coordinate getDeath() {
@@ -55,6 +64,66 @@ public class CalibrationModeData {
 			this.successful = b;
 			
 		}
+
+		public Coordinate getOrigin() {
+			return origin;
+		}
+
+		public void setOrigin(Coordinate origin) {
+			this.origin = origin;
+		}
+
+		public Coordinate getDestination() {
+			return destination;
+		}
+
+		public void setDestination(Coordinate destination) {
+			this.destination = destination;
+		}
+
+		public int getGPSRouteID() {
+			return GPSRouteID;
+		}
+
+		public void setGPSRouteID(int gPSRouteID) {
+			GPSRouteID = gPSRouteID;
+		}
+
+		public double getRoute_gps_lngth() {
+			return route_gps_lngth;
+		}
+
+		public void setRoute_gps_lngth(double route_gps_lngth) {
+			this.route_gps_lngth = route_gps_lngth;
+		}
+
+		public boolean isSuccessful() {
+			return successful;
+		}
+
+		public int getnIter() {
+			return nIter;
+		}
+
+		public void setnIter(int nIter) {
+			this.nIter = nIter;
+		}
+
+		public double getOverlap() {
+			return overlap;
+		}
+
+		public void setOverlap(double overlap) {
+			this.overlap = overlap;
+		}
+
+		public LineString getRoute() {
+			return route;
+		}
+
+		public void setRoute(LineString route) {
+			this.route = route;
+		}
 		
 	}
 	
@@ -67,6 +136,12 @@ public class CalibrationModeData {
 	private boolean omitDecisionMatrixMultifields = false;
 	private long runTime;
 	private ArrayList<CalibrationRoute> calibrationRoutes = new ArrayList<CalibrationRoute>();
+	
+	
+	/**
+	 * The ID of the current iteration : 0 .. n-1
+	 */
+	private int currentNIter;
 	
 
 	public boolean isOmitDecisionMatrixMultifields() {
@@ -238,6 +313,14 @@ public class CalibrationModeData {
 	public void closeCalibrationRouteLogger() {
 		CalibrationModeData.calibrationRouteLogger.close();
 		
+	}
+
+	public int getCurrentNIter() {
+		return currentNIter;
+	}
+
+	public void setCurrentNIter(int currentNIter) {
+		this.currentNIter = currentNIter;
 	}
 	
 }

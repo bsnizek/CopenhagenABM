@@ -1201,13 +1201,12 @@ public class ContextManager implements ContextBuilder<Object> {
 			int resultRouteID, MatchedGPSRoute matchedGPSRoute) {
 
 		AgentFactory agentFactory = new AgentFactory();
-
-		agentFactory.createAgent(from, to, resultRouteID, matchedGPSRoute);
+		agentFactory.createAgent(from, to, resultRouteID, matchedGPSRoute, ContextManager.getNumberOfRepetitions() - ContextManager.getCalibrationAgentsToModel());
 
 	}
 
 	/**
-	 * Returns true everytime a division of currentStep by stepToFireOn returns 0.0d
+	 * Returns true every time a division of currentStep by stepToFireOn returns 0.0d
 	 * @param tickToFireOn
 	 * @param currentTick
 	 * @return
@@ -1457,6 +1456,8 @@ public class ContextManager implements ContextBuilder<Object> {
 				ContextManager.getCalibrationModeData().incrementSuccessfullyModeledRoutes();
 
 				System.out.println("Agent " + cphA.getID() + " at destination.");
+				
+				cphA.setSuccessful(true);
 
 				nextCalibrationAgent();
 
@@ -1467,7 +1468,11 @@ public class ContextManager implements ContextBuilder<Object> {
 					if (ContextManager.getDEBUG_MODE()) {
 						System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + cphA.getID() + ") > 50%");
 					}
+					
 					cphA.setDidNotFindDestination(true);
+					
+					cphA.setDeathLocation(cphA.getPosition());
+					
 					ContextManager.getCalibrationModeData().incrementNumberOfCanceledAgents();
 
 					Route route = cphA.getRoute();
@@ -1571,9 +1576,6 @@ public class ContextManager implements ContextBuilder<Object> {
 	 */
 	public void removeAgentsToBeRemoved() {
 
-		//		System.out.println("BEFORE " + getAgentContext().getObjects(IAgent.class).size());
-		//		System.out.println("TO BE REMOVED " + agentsToBeRemoved.size());
-
 		// let us check whether there are doubles 
 		Set<IAgent> set = new HashSet<IAgent>(agentsToBeRemoved);
 
@@ -1589,7 +1591,16 @@ public class ContextManager implements ContextBuilder<Object> {
 			if ((a!=null) && getAgentContext().contains(a)) {
 
 				if (a.isCalibrationAgent()) {
-
+					
+					// calculate the overlap between the GPS route and the modeled one and store it on the agent (overlap)
+					a.calcOverlap();
+					
+					// write the history
+					a.writeHistory(ContextManager.getModelRunID());
+					
+					a.finishCalibrationData();
+					
+					// remove the agent from the context etc. 
 					ac.remove(a);
 
 					System.out.println("(" + ContextManager.getCurrentTick() + ") Agent ID=" + a.getID() + " removed.");

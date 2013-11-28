@@ -269,9 +269,8 @@ public class PolyLineMover {
 				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
 				this.logToPostgres();
 				
-				agent.writeHistory(ContextManager.getModelRunID());
-				
 				ContextManager.removeAgent(agent);
+				
 				return null;
 			}
 

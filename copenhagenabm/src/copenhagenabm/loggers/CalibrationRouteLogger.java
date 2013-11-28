@@ -11,10 +11,20 @@ import copenhagenabm.main.CalibrationModeData.CalibrationRoute;
 import copenhagenabm.orm.CalibrationRouteDBObject;
 import copenhagenabm.orm.HibernateUtil;
 
+
+/**
+ * CalibrationRouteLogger
+ * 
+ * @author besn
+ *
+ * The CalibrationRouteLogger logs routes and route information stemming from every calibration agent. 
+ *
+ */
 public class CalibrationRouteLogger {
 
 	Session session = null;
 	SessionFactory sf = null;
+	int nRoutes = 0;
 
 	public CalibrationRouteLogger() {
 		setup();
@@ -29,6 +39,7 @@ public class CalibrationRouteLogger {
 	}
 
 	public void log(ArrayList<CalibrationRoute> calibrationRoutes) {
+		nRoutes = calibrationRoutes.size();
 		for (CalibrationRoute c : calibrationRoutes) {
 			CalibrationRouteDBObject cRDBO = new CalibrationRouteDBObject(c);
 			session.save(cRDBO);
@@ -42,6 +53,7 @@ public class CalibrationRouteLogger {
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
+			System.out.println("CalibrationRouteLog has logged " + nRoutes + " routes.");
 			System.out.println("CalibrationRouteLog commited and closed.");
 		}
 	}
