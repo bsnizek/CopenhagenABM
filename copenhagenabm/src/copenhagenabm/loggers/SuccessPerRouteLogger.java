@@ -67,9 +67,8 @@ public class SuccessPerRouteLogger {
 	}
 
 	public String getHead(Handler h) {
-		return "route_id;number_of_iterations;number_of_successful_routes\n";
+		return "route_id;number_of_repetitions;number_of_successful_routes\n";
 	}
-
 
 	public void log() {
 
@@ -97,9 +96,9 @@ public class SuccessPerRouteLogger {
 			int objID = r.getOBJECTID();
 			Integer xx = GPSRouteIDs.get(objID);
 			if (xx==null) 
-				LOGGER.info(objID + ";" + 0);
+				LOGGER.info(objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + 0);
 			else 
-				LOGGER.info(objID + ";" + xx);
+				LOGGER.info(objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + xx);
 		}
 
 	}

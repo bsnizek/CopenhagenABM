@@ -170,11 +170,18 @@ public class CalibrationModeData {
 	private boolean omitDecisionMatrixMultifields = false;
 	private long runTime;
 	private ArrayList<CalibrationRoute> calibrationRoutes = new ArrayList<CalibrationRoute>();
+	private int currentNIter;
+	
+	/**
+	 * uniqueModelID, the model run id
+	 * used for the postgis loggers in order to isolate model runs
+	 */
+	private static long uniqueModelID;
 	
 	/**
 	 * The ID of the current iteration : 0 .. n-1
 	 */
-	private int currentNIter;
+//	private int currentNIter;
 //	private int GPSId;
 	
 
@@ -268,7 +275,7 @@ public class CalibrationModeData {
 //		
 //	}
 
-	public int getTotalNumberOfIterations() {
+	public int getumberOfRepetitions() {
 		return totalNumberOfIterations;
 	}
 
@@ -349,20 +356,24 @@ public class CalibrationModeData {
 		
 	}
 
-	public int getCurrentNIter() {
-		return currentNIter;
-	}
-
-	public void setCurrentNIter(int currentNIter) {
-		this.currentNIter = currentNIter;
-	}
-
 	public void incrementCurrentNIter() {
 		currentNIter = currentNIter + 1;
 	}
 	
 	public void zeroCurrentNIter() {
 		currentNIter = 0;
+	}
+
+	public int getNumberOfRepetitions() {
+		return ContextManager.getNumberOfRepetitions();
+	}
+
+	public long getUniqueModelID() {
+		return uniqueModelID;
+	}
+
+	public static void setUniqueModelID(long uniqueModelID) {
+		CalibrationModeData.uniqueModelID = uniqueModelID;
 	}
 	
 	

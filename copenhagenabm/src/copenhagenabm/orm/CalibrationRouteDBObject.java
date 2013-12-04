@@ -33,6 +33,7 @@ public class CalibrationRouteDBObject {
 	private LineString geom;
 
 	private int ID;
+	private long modelID;
 	private int matchedRouteID;
 	private int n_iter;
 	private boolean success;
@@ -231,6 +232,15 @@ public class CalibrationRouteDBObject {
 
 	public void setCalibrationRoute(CalibrationRoute calibrationRoute) {
 		this.calibrationRoute = calibrationRoute;
+	}
+
+	@Column(name="modelid")
+	public long getModelid() {
+		return ContextManager.getUniqueModelID();
+	}
+
+	public void setModelid(long modelID) {
+		this.modelID = modelID;
 	}
 
 }

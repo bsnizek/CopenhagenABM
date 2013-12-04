@@ -105,6 +105,7 @@ import repastcity3.exceptions.ParameterNotFoundException;
 import copenhagenabm.loggers.BasicAgentLogger;
 import copenhagenabm.loggers.CalibrationLogger;
 import copenhagenabm.loggers.DecisionTextLogger;
+import copenhagenabm.loggers.ModelInfoLogger;
 import copenhagenabm.loggers.PostgresLogger;
 import copenhagenabm.loggers.RoadLoadLogger;
 import copenhagenabm.loggers.SuccessPerRouteLogger;
@@ -167,7 +168,6 @@ public class ContextManager implements ContextBuilder<Object> {
 
 
 	private static RoadLoadLogger roadLoadLogger;
-
 
 	/**
 	 * successPerRouteLogger
@@ -372,6 +372,8 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private static int calibrationAgentsToModel; // the current number of agents to model
 
+	private static ModelInfoLogger modelInfoLogger = new ModelInfoLogger();
+
 	public static ArrayList<IAgent> getAgentsToBeSpawned() {
 		return agentsToBeSpawned;
 	}
@@ -424,16 +426,6 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static double getKMZExaggerationFactor() {
 		String kzef = ContextManager.getProperty("KMZExaggerationFactor");
 		return new Double(kzef);
-	}
-
-
-	/*
-	 * Returns the number of explicative runs
-	 * (int)
-	 */
-	public static int getNumberOfRepetitions() {
-		String nor = ContextManager.getProperty("numberOfRepetitions");
-		return new Integer(nor);
 	}
 
 	/**
@@ -735,16 +727,6 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		roadLoadLogger = new RoadLoadLogger(ContextManager.getRoadLoadLoggerFolder());
 
-		//			try {
-		//				loadMatchedGPSRoutes(gisDataDir);
-		//			} catch (MalformedURLException e) {
-		//				// TODO Auto-generated catch block
-		//				e.printStackTrace();
-		//			} catch (FileNotFoundException e) {
-		//				// TODO Auto-generated catch block
-		//				e.printStackTrace();
-		//			}
-
 		try {
 
 			// Create the buildings - context and geography projection
@@ -890,63 +872,55 @@ public class ContextManager implements ContextBuilder<Object> {
 			}
 		}
 
-
-
-		// let us set up the decision logger - we need it both for the explicative and the predicting model
-		// setupDecisionLogger();
-
-		//		// and the simpleloadlogger
-		//		if (ContextManager.isSimpleLoadLoggerOn()) {
-		//			try {
-		//				ContextManager.getSimpleLoadLogger().setup();
-		//			} catch (IOException e1) {
-		//				// TODO Auto-generated catch block
-		//				e1.printStackTrace();
-		//			}
-		//		}
-
-
-	}
-
-	//	private void setInBatchMode(boolean b) {
-	//		this.inBatchMode = true;
-	//
-	//	}
-
-	private static SuccessPerRouteLogger getSuccessPerRouteLogger() {
-		return successPerRouteLogger;
-
-	}
-
-	private void buildCalibrationModel(String gisDataDir) {
-
-		ContextManager.calibrationModeData = new CalibrationModeData();
-
-		calibrationModeData.setAngleToDestWeight(ContextManager.getAngleToDestination());
-		calibrationModeData.setOmitDecisionMatrixMultifields(ContextManager.omitDecisionMatrixMultifields());
-
-		ContextManager.getCalibrationModeData().setStartTime(System.currentTimeMillis());
-
-		// then we build the spatial index for the roads
-		//		buildSpatialIndexRoad();
-		// build the junctions
-
-		// TODO: this here throws errors (Road: Error: this Road object already has two Junctions.)
-		//		buildRoadNetwork();
-
 		try {
-			loadMatchedGPSRoutes(gisDataDir);
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
+			ContextManager.getModelInfoLogger().setup();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+	}
+
+	private static ModelInfoLogger getModelInfoLogger() {
+		return ContextManager.modelInfoLogger ;
+	}
+
+	private static SuccessPerRouteLogger getSuccessPerRouteLogger() {
+		return successPerRouteLogger;
+	}
+
+	private void buildCalibrationModel(String gisDataDir) {
+
+		// Let us load the GPS routes.
+
+		try {
+			loadMatchedGPSRoutes(gisDataDir);
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		// set the unique model ID
+		setUniqueModelID(System.currentTimeMillis());
+
+		// build the calibration model data object
+		ContextManager.calibrationModeData = new CalibrationModeData();
+
+		calibrationModeData.setAngleToDestWeight(ContextManager.getAngleToDestination());
+		calibrationModeData.setOmitDecisionMatrixMultifields(ContextManager.omitDecisionMatrixMultifields());
+		calibrationModeData.setStartTime(System.currentTimeMillis());
+
+		int numberOfRoutes = matchedGPSRouteContext.getObjects(MatchedGPSRoute.class).size();
+
+		calibrationModeData.setTotalNumberOfIterations(numberOfRoutes * getNumberOfRepetitions());
+
+
+
+
 		createAgentContext();
 
-//		ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
+		//		ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
 
 		theRoadNetwork = new RoadNetwork();
 
@@ -1040,19 +1014,19 @@ public class ContextManager implements ContextBuilder<Object> {
 		ContextManager.calibrationModeData = calibrationModeData;
 	}
 
-//	/*
-//	 * returns whether we are in explicative mode
-//	 */
-//	private static CALIBRATION_MODE getCalibrationMode() {
-//		String eM = getProperty("calibrationMode");
-//		if (eM.equalsIgnoreCase("SEQUENTIAL")) {
-//			return CALIBRATION_MODE.SEQUENTIAL;
-//		} else if (eM.equalsIgnoreCase("PARALLEL")) {
-//			return CALIBRATION_MODE.PARALLEL;
-//		} else {
-//			return CALIBRATION_MODE.UNDEFINED;
-//		}
-//	}
+	//	/*
+	//	 * returns whether we are in explicative mode
+	//	 */
+	//	private static CALIBRATION_MODE getCalibrationMode() {
+	//		String eM = getProperty("calibrationMode");
+	//		if (eM.equalsIgnoreCase("SEQUENTIAL")) {
+	//			return CALIBRATION_MODE.SEQUENTIAL;
+	//		} else if (eM.equalsIgnoreCase("PARALLEL")) {
+	//			return CALIBRATION_MODE.PARALLEL;
+	//		} else {
+	//			return CALIBRATION_MODE.UNDEFINED;
+	//		}
+	//	}
 
 	public static RoadNetwork getTheRoadNetwork() {
 		return theRoadNetwork;
@@ -1588,13 +1562,13 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 
-//	public void killAgent(IAgent agent) {
-//
-//		totalNumberOfKills++;
-//		//		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + getMatchedGPSRoute().getOBJECTID());
-//		ContextManager.incrementNumberOfKills();
-//		getAgentContext().remove(agent);
-//	}
+	//	public void killAgent(IAgent agent) {
+	//
+	//		totalNumberOfKills++;
+	//		//		ContextManager.getKillLogger().logLine(agent.getPosition().x + ";" + agent.getPosition().y + ";" + agent.getID() + ";" + getMatchedGPSRoute().getOBJECTID());
+	//		ContextManager.incrementNumberOfKills();
+	//		getAgentContext().remove(agent);
+	//	}
 
 	/**
 	 * 
@@ -1660,7 +1634,7 @@ public class ContextManager implements ContextBuilder<Object> {
 						a = null;
 					}
 				}
-				
+
 				nextCalibrationAgent();
 
 			}
@@ -1669,7 +1643,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		}
 
-		
+
 	}
 
 	//	private void decreaseCalibrationAgentsToModel() {
@@ -1769,18 +1743,6 @@ public class ContextManager implements ContextBuilder<Object> {
 			roadLogger.dumpWholeDay();
 		}
 	}
-
-	//	private void setupDecisionLogger() {
-	//		try {
-	//			decisionLogger = new DecisionLogger(ContextManager.getProperty("DecisionLoggerFile"));
-	//		} catch (IOException e) {
-	//			// TODO Auto-generated catch block
-	//			e.printStackTrace();
-	//		} catch (SchemaException e) {
-	//			// TODO Auto-generated catch block
-	//			e.printStackTrace();
-	//		}
-	//	}
 
 	//	private void setupCrowdingNetworkDumper() {
 	//
@@ -2401,7 +2363,7 @@ public class ContextManager implements ContextBuilder<Object> {
 	}
 
 	public static String getSuccessPerRouteLoggerFile() {
-		return getProperty("SuccessPerRouteLoggerFile");
+		return "log/success-per-route-" + ContextManager.getAngleToDestination() + "-" + ContextManager.omitDecisionMatrixMultifields() + "-" + getNumberOfRepetitions() + "-reps.txt";
 	}
 
 	/**
@@ -2469,6 +2431,11 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	public static String getSuccessloggerFile() {
 		return "log/successlog.txt";
+	}
+	
+
+	public static String getModelInfoLoggerFile() {
+		return "log/modelinfo.txt";
 	}
 
 
@@ -2687,5 +2654,24 @@ public class ContextManager implements ContextBuilder<Object> {
 	public void setCalibrationLets(Stack<CalibrationLet> calibrationLets) {
 		this.calibrationLets = calibrationLets;
 	}
+
+	/**
+	 * @return the setting numberOfRepetitions from the config file.
+	 * The number of repetition the model does in calibration mode.
+	 */
+	public static int getNumberOfRepetitions() {
+		String p = getProperty("numberOfRepetitions");
+		return new Integer(p);
+
+	}
+
+	public static long getUniqueModelID() {
+		return ContextManager.getCalibrationModeData().getUniqueModelID();
+	}
+
+	public void setUniqueModelID(long l) {
+		ContextManager.getCalibrationModeData().setUniqueModelID(l);
+	}
+
 
 }

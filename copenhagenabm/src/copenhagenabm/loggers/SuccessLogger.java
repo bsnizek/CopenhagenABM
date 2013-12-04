@@ -49,7 +49,7 @@ public class SuccessLogger {
 	public void log(CalibrationModeData calibrationModeData) {
 		LOGGER.info(calibrationModeData.getAngleToDestWeight() + ";" + 
 				calibrationModeData.isOmitDecisionMatrixMultifields() + ";" +
-				calibrationModeData.getTotalNumberOfIterations() + ";" + 
+				calibrationModeData.getNumberOfRepetitions() + ";" + 
 				calibrationModeData.getSuccessfullyModeledRoutes() + ";" + 
 				calibrationModeData.getRunTime()
 
