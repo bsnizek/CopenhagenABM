@@ -1713,12 +1713,6 @@ public class ContextManager implements ContextBuilder<Object> {
 		agentsToBeRemoved.add(cphA);
 	}
 
-	//	private void calcPathSizeAndDumpResults() {
-	//		ContextManager.getRouteStore().calculatePathSize();
-	//		ContextManager.getRouteStore().writeResultRoutes();
-	//		// *** init another route store
-	//	}
-
 	private void terminateLoggers() {
 
 		if (this.routeLogger != null) {
@@ -1726,88 +1720,17 @@ public class ContextManager implements ContextBuilder<Object> {
 
 		}
 
-		//		if (ContextManager.isDecisionLoggerOn()) {
-		//			this.decisionLogger.close();
-		//		}
-
-
-		//		// let us dump the load logger
-		//		if (ContextManager.isSimpleLoadLoggerOn()) {
-		//			ContextManager.getSimpleLoadLogger().dump();
-		//		}
-
 		LOGGER.log(Level.FINER, "Loggers terminated.");
 
 		RoadLoadLogger roadLogger = ContextManager.getRoadLoadLogger();
 		if (roadLogger != null) {
 			roadLogger.dumpWholeDay();
 		}
+		
+		ContextManager.getModelInfoLogger().log(ContextManager.getCalibrationModeData());
+		ContextManager.getModelInfoLogger().close();
+		
 	}
-
-	//	private void setupCrowdingNetworkDumper() {
-	//
-	//		if (isCrowdingLoggerOn()) {
-	//
-	//			// add the data structures for the crowding network
-	//			crowdingNetwork = new RoadNetwork();
-	//			String dirName = ContextManager.getProperty("dumpCrowdingNetworkFolder");
-	//			crowdingNetworkLogger = new CrowdingNetworkLogger(dirName);
-	//			ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
-	//			int dumpFrequency = Integer.parseInt(ContextManager.getProperty("dumpCrowdingNetworkEveryTick"));
-	//			schedule.schedule(ScheduleParameters.createRepeating(1, dumpFrequency, ScheduleParameters.LAST_PRIORITY), this,
-	//					"dumpCrowdingNetwork");
-	//		}
-	//	}
-
-	//	/*
-	//	 * 
-	//	 * Sets up the dumper for the load network
-	//	 * 
-	//	 */
-	//	private void setupLoadSumNetworkDumper() {
-	//		if (isLoadSumNetworkDumperOn()) {
-	//			String loadLoggerFileName = getLoadLoggerFolderName();
-	//			loadNetwork = new LoadNetwork(loadLoggerFileName, getModelRunID());
-	//		}
-	//	}
-
-
-	//	public static boolean isCrowdingLoggerOn() {
-	//		return ContextManager.getProperty("CrowdingLogger").equalsIgnoreCase("ON");
-	//	}
-	//
-	//
-	//	public static boolean isLoadSumNetworkDumperOn() {
-	//		return ContextManager.getProperty("LoadLogger").equalsIgnoreCase("ON");
-	//	}
-
-	//	/**
-	//	 * 
-	//	 * The filename in which we dump the load data.
-	//	 * 
-	//	 * @return
-	//	 */
-	//	public static String getLoadLoggerFolderName() {
-	//		return ContextManager.getProperty("LoadLoggerFolderName");
-	//	}
-
-	//	/*
-	//	 * triggered by the schedule
-	//	 */
-	//	// TODO #5: crowding network dumper to be finished
-	//
-	//	public void dumpCrowdingNetwork() {
-	//		if (isCrowdingLoggerOn())
-	//			try {
-	//				crowdingNetworkLogger.dump(ContextManager.getCrowdingNetwork(), 
-	//						RunEnvironment.getInstance().getCurrentSchedule().getTickCount(), 
-	//						getModelRunID());
-	//			} catch (Exception e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			}
-	//	}
-
 
 	/**
 	 * Returns the number of agents on a road at the current tick.
@@ -1824,8 +1747,7 @@ public class ContextManager implements ContextBuilder<Object> {
 
 	private void createSchedule() {
 		ISchedule schedule = RunEnvironment.getInstance().getCurrentSchedule();
-		//schedule.schedule(ScheduleParameters.createRepeating(1, 1000, ScheduleParameters.LAST_PRIORITY), this,
-		//		"printTicks");
+
 		schedule.schedule(ScheduleParameters.createRepeating(1, 1, 0), this,
 				"stepAgents");
 
@@ -2426,7 +2348,8 @@ public class ContextManager implements ContextBuilder<Object> {
 	public static String getCalibrationTextLoggerFile() {
 		// TODO: add the iteration number
 		// return "log/calibrationlog-" + ContextManager.omitDecisionMatrixMultifields() + "-" + getAngleToDestination() +  ".txt";
-		return "log/calibrationlog-" + ContextManager.getAngleToDestination() + "-" + ContextManager.omitDecisionMatrixMultifields() + ".txt";
+//		return "log/calibrationlog-" + ContextManager.getAngleToDestination() + "-" + ContextManager.omitDecisionMatrixMultifields() + ".txt";
+		return "log/calibrationlog-" + ContextManager.getAngleToDestination() + "-" + ContextManager.omitDecisionMatrixMultifields() + "-" + getNumberOfRepetitions() + "-reps.txt";
 	}
 
 	public static String getSuccessloggerFile() {

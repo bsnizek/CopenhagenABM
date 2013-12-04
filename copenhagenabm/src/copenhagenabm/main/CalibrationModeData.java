@@ -375,6 +375,10 @@ public class CalibrationModeData {
 	public static void setUniqueModelID(long uniqueModelID) {
 		CalibrationModeData.uniqueModelID = uniqueModelID;
 	}
+
+	public int getTotalNumberOfIterations() {
+		return totalNumberOfIterations;
+	}
 	
 	
 }

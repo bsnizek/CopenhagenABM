@@ -40,14 +40,8 @@ public class SuccessPerRouteLogger {
 //			return "SUM:" + this.getTotalNumberOfIterations() + ";" + this.getSuccessfulRoutes();
 //		}
 
-		private int getSuccessfulRoutes() {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
-		private int getTotalNumberOfIterations() {
-			// TODO Auto-generated method stub
-			return 0;
+		public String getHead(Handler h) {
+			return "modelid;route_id;number_of_repetitions;number_of_successful_routes\n";
 		}
 
 	}
@@ -66,9 +60,6 @@ public class SuccessPerRouteLogger {
 		LOGGER.setUseParentHandlers(false);
 	}
 
-	public String getHead(Handler h) {
-		return "route_id;number_of_repetitions;number_of_successful_routes\n";
-	}
 
 	public void log() {
 
@@ -93,12 +84,17 @@ public class SuccessPerRouteLogger {
 		Iterable<MatchedGPSRoute> mGPSR = ContextManager.getMatchedGPSRoutes();
 
 		for (MatchedGPSRoute r : mGPSR) {
+			
+			long modelID = ContextManager.getCalibrationModeData().getUniqueModelID();
+			
 			int objID = r.getOBJECTID();
+			
 			Integer xx = GPSRouteIDs.get(objID);
+			
 			if (xx==null) 
-				LOGGER.info(objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + 0);
+				LOGGER.info(modelID + ";" + objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + 0);
 			else 
-				LOGGER.info(objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + xx);
+				LOGGER.info(modelID + ";" + objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + xx);
 		}
 
 	}
