@@ -46,10 +46,14 @@ public class PointPairDistance {
   private double distance = Double.NaN;
   private boolean isNull = true;
 
-  public PointPairDistance()
-  {
+  public PointPairDistance() {
   }
 
+  public PointPairDistance(Coordinate p0, Coordinate p1) {
+	  
+	  initialize(p0,p1);
+  }
+  
   public void initialize() { isNull = true; }
 
   public void initialize(Coordinate p0, Coordinate p1)

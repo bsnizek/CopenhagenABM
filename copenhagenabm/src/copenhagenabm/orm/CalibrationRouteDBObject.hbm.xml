@@ -32,6 +32,10 @@
 		<property name="death" type="org.hibernatespatial.postgis.PGGeometryUserType" />
 		
 		<property name="calctime" type="double" />
+		
+		<property name="agentid" type="integer" />
+		
+		<property name="origo_dest_dist" type="double"/>
 	
 	</class>
 

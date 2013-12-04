@@ -4,7 +4,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
 import copenhagenabm.environment.FixedGeography;
-import copenhagenabm.main.ContextManager;
 
 public class PPoint implements FixedGeography {
 

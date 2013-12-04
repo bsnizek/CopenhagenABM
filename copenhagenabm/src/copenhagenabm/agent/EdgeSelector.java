@@ -73,7 +73,7 @@ public class EdgeSelector {
 		ArrayList<Road> newRoads = new ArrayList<Road>();
 
 		if (roads.size() == 0) {
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getCHOICE_DEBUG_MODE()) {
 				System.out.println("roads=null");
 			}
 		}
@@ -91,7 +91,7 @@ public class EdgeSelector {
 			}
 		}
 
-		if (ContextManager.getDEBUG_MODE()) {
+		if (ContextManager.getCHOICE_DEBUG_MODE()) {
 			System.out.println(dMRoadIDS);
 		}
 
@@ -109,7 +109,7 @@ public class EdgeSelector {
 
 				if (occurrences>3) {
 					// do not add the road, we have already been there 3 times
-					if (ContextManager.getDEBUG_MODE()) {
+					if (ContextManager.getCHOICE_DEBUG_MODE()) {
 						System.out.println("Road with ID=" + rID +" has already " + occurrences + " - skipping;");
 					}
 				} else {
@@ -129,7 +129,7 @@ public class EdgeSelector {
 						}
 
 						if (GlobalVars.SCORING_PARAMS.EXCEPT_U_TURN && (rID == crID)) {
-							if (ContextManager.getDEBUG_MODE()) {
+							if (ContextManager.getCHOICE_DEBUG_MODE()) {
 								System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + this.getAgent().getID() + ") Road ID=" + rID + " not added (U-turn).");
 							}
 
@@ -143,7 +143,7 @@ public class EdgeSelector {
 		} 
 
 		if (newRoads.size()==0) {
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getCHOICE_DEBUG_MODE()) {
 				System.out.println("No edges left, adding only ingoing edge");
 			}
 			newRoads.add(currentRoad); 
@@ -300,17 +300,17 @@ public class EdgeSelector {
 
 
 		if (r == null) {
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getCHOICE_DEBUG_MODE()) {
 				System.out.println("EdgeSelector.getRoad() : rollDice() returned null");
 			}
 			r =  (Road) decisionMatrix.rollDice();
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getCHOICE_DEBUG_MODE()) {
 				System.out.println("rollDice() second attempt returned "+ r);
 			}
 		}
 
 		if (r==null) {
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getCHOICE_DEBUG_MODE()) {
 				System.out.println("EdgeSelector returns null. " + this.originalRoadIDS);
 			}
 			r =  (Road) decisionMatrix.rollDice();
@@ -326,7 +326,7 @@ public class EdgeSelector {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if (ContextManager.getDEBUG_MODE()) {
+		if (ContextManager.getCHOICE_DEBUG_MODE()) {
 			System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + this.getAgent().getID() + ") EdgeSelector: " + this.originRoadID + " -> " +  newRoadID);
 		}
 		return r;

@@ -61,19 +61,17 @@ public class AgentFactory {
 	}
 
 	/*
-	 * createAgent() gives birth to an agent given two coordinates
-	 * used for explicative agents that are born in a coodinate and die in one
+	 * createAgent() gives birth to an calibration agent given two coordinates
+	 * used for calibration agents that are born in a coodinate and die in one
 	 * 
 	 */
-	public CPHAgent createAgent(Coordinate from, Coordinate to, int sourceRouteID, MatchedGPSRoute matchedGPSRoute, int nIter) {
+	public CPHAgent createAgent(Coordinate from, Coordinate to, MatchedGPSRoute matchedGPSRoute, int nIter) {
 		
 		ContextManager.incrementAgentCounter();
 
-		CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute, nIter); // Create a new agent
+		CPHAgent a = new CPHAgent(from, to, matchedGPSRoute, nIter); // Create a new agent
 		ContextManager.addAgentToContext(a);  // add it to the context
 		a.snapAgentToRoad();
-
-		System.out.println("(" + ContextManager.getCurrentTick() + ") Calibration agent ID=" + a.getID() + " @ routeID=" + matchedGPSRoute.getOBJECTID());
 
 		return a;
 	}

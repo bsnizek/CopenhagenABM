@@ -18,7 +18,6 @@ along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
 
 package repastcity3.environment;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import copenhagenabm.environment.Road;

@@ -1,12 +1,4 @@
 package copenhagenabm.tests;
-
-import org.hibernate.Session;
-
-import com.vividsolutions.jts.geom.Coordinate;
-
-import copenhagenabm.orm.Dot;
-import copenhagenabm.orm.HibernateUtil;
-
 public class Test {
 
 	/**

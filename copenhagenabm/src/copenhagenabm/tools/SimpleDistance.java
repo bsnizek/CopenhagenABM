@@ -24,26 +24,21 @@ import com.vividsolutions.jts.geom.GeometryFactory;
  */
 public class SimpleDistance {
 	
-	private CoordinateReferenceSystem crs;
 	private CoordinateReferenceSystem targetCRS;
 	private MathTransform transform;
 	private GeometryFactory fact = new GeometryFactory();
 
 	public SimpleDistance(CoordinateReferenceSystem crs, String epsg) {
-		this.crs = crs;
 		try {
 			targetCRS = CRS.decode(epsg);
 		} catch (NoSuchAuthorityCodeException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (FactoryException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
 			transform = CRS.findMathTransform(crs, targetCRS);
 		} catch (FactoryException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -57,7 +52,7 @@ public class SimpleDistance {
 	}
 	
 	/*
-	 * retruns the distance between two points
+	 * returns the distance between two points
 	 */
 	public double distance(Point p1, Point p2) {
 		Geometry targetGeometry0 = null;
@@ -65,19 +60,15 @@ public class SimpleDistance {
 		try {
 			targetGeometry0 = JTS.transform( p1, transform);
 		} catch (MismatchedDimensionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TransformException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
 			targetGeometry1 = JTS.transform( p2, transform);
 		} catch (MismatchedDimensionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TransformException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -94,10 +85,8 @@ public class SimpleDistance {
 		try {
 			targetGeometry0 = JTS.transform( g, transform);
 		} catch (MismatchedDimensionException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TransformException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return targetGeometry0.getLength();

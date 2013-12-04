@@ -27,7 +27,6 @@ import org.geotools.referencing.GeodeticCalculator;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 
 // import copenhagenabm.environment.NearestRoadCoordCache;
@@ -58,6 +57,8 @@ import repastcity3.exceptions.NoIdentifierException;
 import repastcity3.exceptions.RoutingException;
 
 public class CPHAgent implements IAgent {
+
+	private double instantiationTime = ContextManager.getModelRunSeconds();
 
 	private int birthTick = 0;
 
@@ -223,7 +224,7 @@ public class CPHAgent implements IAgent {
 					.getLengthInMetres();
 			double routeLength = r.getLengthInMetres();
 			double moreThan50Percent = matchedGPSRouteLength * 1.5;
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getPOSITION_DEBUG_MODE()) {
 				System.out.println("(" + ContextManager.getCurrentTick()
 						+ ") + A(" + this.getID() + ") <50% " + routeLength
 						+ " < " + moreThan50Percent);
@@ -263,28 +264,33 @@ public class CPHAgent implements IAgent {
 	 *            the number of the current iteration for the current route (
 	 *            0..max number of iterations -1 )
 	 */
-	public CPHAgent(Coordinate sourceCoord, Coordinate destinationCoord,
-			int GPSID, MatchedGPSRoute matchedGPSRoute, int nIter) {
-
-		// CPHAgent a = new CPHAgent(from, to, sourceRouteID, matchedGPSRoute,
-		// sourceRouteID); // Create a new agent
+	public CPHAgent(
+			Coordinate sourceCoord,
+			Coordinate destinationCoord,
+			MatchedGPSRoute matchedGPSRoute,
+			int nIter) {
 
 		this.setDestinationCoordinate(destinationCoord);
 
-		// this is an unclean workaround
 		this.setSourceCoord(sourceCoord);
 		this.id = uniqueID++;
-		this.gpsRouteID = GPSID;
-		this.setRoute(new Route(this.id, GPSID, ContextManager.getModelRunID())); // initialize
+		this.gpsRouteID = matchedGPSRoute.getOBJECTID();
+		this.setRoute(new Route(this.id, this.gpsRouteID, ContextManager.getModelRunID())); // initialize
 
 		this.isCalibrationAgent = true; // yes, we have a calibration agent
 		this.matchedGPSRoute = matchedGPSRoute;
 		double totLengthGPSRoute = matchedGPSRoute.getLengthInMetres();
 
-		CalibrationModeData cmd = new CalibrationModeData();
+		System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + 
+				this.getID() + ") GPS(" + matchedGPSRoute.getOBJECTID() + 
+				") CPHAgent instantiated, " + ContextManager.getCalibrationLets().size() + " to go.");
 
-		this.calibrationRoute = cmd.new CalibrationRoute(this, sourceCoord,
-				destinationCoord, GPSID, totLengthGPSRoute, nIter);
+		this.calibrationRoute = new CalibrationModeData().new CalibrationRoute(this, 
+				sourceCoord,
+				destinationCoord, 
+				this.gpsRouteID, 
+				totLengthGPSRoute, 
+				nIter);
 	}
 
 	/**
@@ -532,12 +538,12 @@ public class CPHAgent implements IAgent {
 
 			double distance = speed * stepLength;
 
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getPOSITION_DEBUG_MODE()) {
 				System.out.println(this.getPosition());
 			}
 			OvershootData overshoot = plm.move(distance);
 
-			if (ContextManager.getDEBUG_MODE()) {
+			if (ContextManager.getPOSITION_DEBUG_MODE()) {
 				System.out.println(this.getPosition());
 			}
 			if (this.getOrthodromicDistance(this.getPosition(),
@@ -582,8 +588,7 @@ public class CPHAgent implements IAgent {
 		}
 
 		if (this.isAtDestination()) {
-			ContextManager.removeAgent(this);
-			ContextManager.setLaunchNextCalibrationAgent(true);
+			this.prepareForRemoval(true);
 		}
 
 	}
@@ -605,15 +610,7 @@ public class CPHAgent implements IAgent {
 
 	}
 
-	/* (non-Javadoc)
-	 * @see copenhagenabm.agent.IAgent#finishCalibrationData()
-	 */
-	public void finishCalibrationData() {
-		this.calibrationRoute.setRoute(this.getRoute().getRouteAsLineString());
-		if (this.getDeathLocation() != null) {
-			this.calibrationRoute.setDeath(this.getDeathLocation());
-		}
-	}
+
 
 	public void setDeathLocation(Coordinate position) {
 		this.deathLocation = position;
@@ -956,16 +953,34 @@ public class CPHAgent implements IAgent {
 
 	}
 
-	@Override
-	public void finishCalibrationRoute(boolean b) {
-		if (b) {
-			this.calibrationRoute.setSuccessful(true);
+	
+	/* (non-Javadoc)
+	 * @see copenhagenabm.agent.IAgent#finishCalibrationData()
+	 * 
+	 * Collects the calibration route data and throws it over into the CalibrationRoute object.
+	 * 
+	 */
+	public void finishCalibrationData() {
+		this.calibrationRoute.setRoute(this.getRoute().getRouteAsLineString());
+
+		if (this.getDeathLocation() != null) {
+			this.calibrationRoute.setDeath(this.getDeathLocation());
 		}
 
-		this.calibrationRoute.setDeath(this.getDeathLocation());
+		this.calibrationRoute.setAgent(this);
 
 		ContextManager.getCalibrationModeData().addCalibrationRoute(
 				this.getCalibrationRoute());
+
+		this.calibrationRoute.setEdge_lngth_avg(this.getRoute().getAverageEdgeLength());
+
+		this.calibrationRoute.setCalctime(ContextManager.getModelRunSeconds() - this.getInstantiationTime());
+
+		this.calibrationRoute.setOverlap(getOverlap());
+
+		this.calibrationRoute.setSuccessful(this.isSuccessful());
+		
+		ContextManager.getCalibrationModeData().addCalibrationRoute(this.calibrationRoute);
 
 	}
 
@@ -1088,5 +1103,33 @@ public class CPHAgent implements IAgent {
 	public Coordinate getDeathLocation() {
 		return deathLocation;
 	}
+
+	public double getInstantiationTime() {
+		return instantiationTime;
+	}
+
+	public void setInstantiationTime(double instantiationTime) {
+		this.instantiationTime = instantiationTime;
+	}
+
+	public void prepareForRemoval(boolean isSuccessful) {
+
+		if (isSuccessful) {
+			ContextManager.getCalibrationModeData().incrementSuccessfullyModeledRoutes();
+			System.out.println("(" + ContextManager.getCurrentTick() + ") " +  "A(" + getID() + ") at destination.");
+		}
+
+		this.writeHistory(ContextManager.getModelRunID());
+
+		//		ContextManager.moveAgent(this, ContextManager.getGeomFac().createPoint(this.getDestinationCoordinate()));
+
+		ContextManager.logToPostgres(this);
+
+		this.setSuccessful(isSuccessful);
+
+		ContextManager.removeAgent(this);
+
+	}
+
 
 }

@@ -36,7 +36,9 @@ public class CalibrationLogger {
 		}
 		
 		public String getTail(Handler h) {
+			
 			double sum = 0.0d;
+			
 			for (double d : pathSizes) {
 				sum = sum + d;
 			}
@@ -65,6 +67,11 @@ public class CalibrationLogger {
 	 public void logLine(String line) {
 		 LOGGER.info(line);
 	 }
+	 
+	 public void close() {
+		 fileTxt.close();
+	 }
+	 
 	
 
 }

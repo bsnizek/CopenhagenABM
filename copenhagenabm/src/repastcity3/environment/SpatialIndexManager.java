@@ -110,7 +110,7 @@ public abstract class SpatialIndexManager //implements Cacheable
 				// Optionally record the closest points
 				if (closestPoints != null) {
 					closestPoints.clear();
-					closestPoints.addAll(Arrays.asList(distOp.closestPoints()));
+					closestPoints.addAll(Arrays.asList(distOp.nearestPoints()));
 				}
 			} // if thisDist < minDist
 		} // for nearRoads

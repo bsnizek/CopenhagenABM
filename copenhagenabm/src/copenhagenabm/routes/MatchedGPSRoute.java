@@ -71,14 +71,29 @@ public class MatchedGPSRoute implements FixedGeography {
 		return sd.geometryLengthInMetres(this.getGeometry());
 
 	}
+	
+	public Coordinate[] getCoordinates() {
+		return ContextManager.matchedGPSRouteProjection.getGeometry(this).getCoordinates();
+	}
+	
+	public ArrayList<Coordinate> getCoordinatesAsArrayList() {
+		return new ArrayList<Coordinate>(Arrays.asList(getCoordinates()));
+	}
+	
+	public Coordinate getOrigin() {
+		return getCoordinatesAsArrayList().get(0);
+	}
+	
+	public Coordinate getDestination() {
+		return getCoordinatesAsArrayList().get(getCoordinatesAsArrayList().size()-1);
+	}
 
 	/**
 	 * returns the Geometry of the route as a LineString
 	 * @return
 	 */
 	public LineString getGeometry() {
-		Coordinate[] cc = ContextManager.matchedGPSRouteProjection.getGeometry(this).getCoordinates();
-		return fact.createLineString(cc);
+		return fact.createLineString(getCoordinates());
 
 	}
 

@@ -14,16 +14,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package copenhagenabm.main;
-
-import java.io.File;
-import java.util.logging.FileHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 /**
  * Used to configure logging. This code could go anywhere really but this seems like a good place.
@@ -34,7 +27,7 @@ import java.util.logging.SimpleFormatter;
 abstract class CopenhagenABMLogging {
 	// Make sure this is only initialised once
 	private static boolean initialised = false;
-	
+
 	// Creates a file handler that outputs everything and add's it to the root logger.
 	public static void init() {
 		if (CopenhagenABMLogging.initialised) {
@@ -43,28 +36,26 @@ abstract class CopenhagenABMLogging {
 		else {
 			CopenhagenABMLogging.initialised = true;
 		}
-		
+
 		try {
 
 			// Get the root logger
-			Logger logger = Logger.getLogger("");
-//			Logger logger = Logger.getLogger("repastcity3");
-
+			//			Logger logger = Logger.getLogger("");
 			// Create handlers
-			File logFile = new File("model_log.txt");
-			if (logFile.exists())
-				logFile.delete(); // Delete an old log file
-			FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath());
-			fileHandler.setLevel(Level.ALL); // Write everything to the file
-
-			// Create a formatters.
-			Formatter fileFormatter = new SimpleFormatter();
-
-			// Add the formatters to the handlers
-			fileHandler.setFormatter(fileFormatter);
+			//			File logFile = new File("model_log.txt");
+			//			if (logFile.exists())
+			//				logFile.delete(); // Delete an old log file
+			//			FileHandler fileHandler = new FileHandler(logFile.getAbsolutePath());
+			//			fileHandler.setLevel(Level.ALL); // Write everything to the file
+			//
+			//			// Create a formatters.
+			//			Formatter fileFormatter = new SimpleFormatter();
+			//
+			//			// Add the formatters to the handlers
+			//			fileHandler.setFormatter(fileFormatter);
 
 			// Add the handlers to the logger
-			logger.addHandler(fileHandler);
+			//			logger.addHandler(fileHandler);
 
 		} catch (Exception e) {
 			System.err.println("Problem creating loggers, cannot continue (exit with -1).");

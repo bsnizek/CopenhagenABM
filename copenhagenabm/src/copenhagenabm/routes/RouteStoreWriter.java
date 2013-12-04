@@ -2,7 +2,6 @@ package copenhagenabm.routes;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +17,6 @@ import org.geotools.data.FeatureStore;
 import org.geotools.data.FileDataStoreFactorySpi;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.indexed.IndexedShapefileDataStoreFactory;
-import org.geotools.factory.FactoryConfigurationError;
 import org.geotools.feature.AttributeType;
 import org.geotools.feature.AttributeTypeFactory;
 import org.geotools.feature.DefaultAttributeTypeFactory;
@@ -54,14 +52,14 @@ public class RouteStoreWriter {
 
 	//path size
 	AttributeType pathSizeAttributeType = AttributeTypeFactory.newAttributeType("pathsize", Double.class);
-	
+
 	AttributeType routeLen = AttributeTypeFactory.newAttributeType("routeLength", Double.class);
 
 	int featurecounter = 0;
 
 	private String fileName;
 
-	
+
 
 	/**
 	 * 
@@ -86,7 +84,7 @@ public class RouteStoreWriter {
 		DefaultGeographicCRS crs = DefaultGeographicCRS.WGS84;
 
 		ShapefileDataStore store = (ShapefileDataStore) factory.createNewDataStore(map);
-		store.forceSchemaCRS(crs); // TODO: maybe one should not hardcode this one ? 
+		store.forceSchemaCRS(crs);
 
 		FeatureType type = getFeatureType();
 
@@ -98,22 +96,20 @@ public class RouteStoreWriter {
 		fs.setTransaction(transaction);
 
 	}
-	
+
 	/**
 	 * Writes the simulated routes to a shapefile
 	 */
 	public void write() {
 		HashMap<Integer, MatchedGPSRoute> matchedGPSRoutes = routeStore.getMatchedGPSRoutes();
 		Set<Integer> routeIDs = matchedGPSRoutes.keySet();
-		
+
 		for (Integer routeID : routeIDs) {
 			HashMap<Integer, ArrayList<Route>> simulatedRoutes = routeStore.simulatedRoutes;
 			ArrayList<Route> routes = simulatedRoutes.get(routeID);
 			for (Route r : routes) {
 				try {
 					writeSimulatedRoute(r, matchedGPSRoutes.get(routeID));
-				} catch (FactoryConfigurationError e) {
-					e.printStackTrace();
 				} catch (SchemaException e) {
 
 					e.printStackTrace();
@@ -123,27 +119,28 @@ public class RouteStoreWriter {
 			}
 
 		}
-		
+
 		for (Integer routeID : routeIDs) {
 			System.out.println(routeID + " :: " + this.routeStore.getAveragePathSizeAttr().get(routeID));
 		}
-		
-		
+
+
 	}
 
-	private void writeSimulatedRoute(Route simRoute, MatchedGPSRoute matchedGPSRoute) throws FactoryConfigurationError, SchemaException, IllegalAttributeException {
-		
+	@SuppressWarnings("unchecked")
+	private void writeSimulatedRoute(Route simRoute, MatchedGPSRoute matchedGPSRoute) throws SchemaException, IllegalAttributeException {
+
 		FeatureCollection collection = FeatureCollections.newCollection();
-		
+
 		FeatureType ftMeasurement = FeatureTypeBuilder.newFeatureType(
 				new AttributeType[] {	
-										geomField,
-										ID, 
-										GPSID, 
-										bestAttributeType, 
-										pathSizeAttributeType, 
-										routeLen
-										}, "route"); 
+						geomField,
+						ID, 
+						GPSID, 
+						bestAttributeType, 
+						pathSizeAttributeType, 
+						routeLen
+				}, "route"); 
 
 		LineString mls = simRoute.getRouteAsLineString();
 		double length = mls.getLength();
@@ -152,11 +149,10 @@ public class RouteStoreWriter {
 		Feature ft = ftMeasurement.create(o, "route-" + featurecounter++);
 
 		collection.add(ft);
-		
+
 		try {
 			fs.addFeatures(collection);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -173,9 +169,9 @@ public class RouteStoreWriter {
 		} finally {
 			transaction.close();
 		}
-	
+
 		System.out.println("RouteStoreWriter : " + this.routeStore.getSimulatedRoutes().size() +  " Routes written to " + this.fileName + ".");
-	
+
 	}
 
 
@@ -187,7 +183,7 @@ public class RouteStoreWriter {
 						"GPSID:Integer," + 
 						"best:Boolean," + 
 						"pathsize:Double," + 
-						"routeLen:Double");
+				"routeLen:Double");
 		//						"roadID:String," +
 		//						"absCrowd:Integer," + 
 		//						"crowdFac:Double"

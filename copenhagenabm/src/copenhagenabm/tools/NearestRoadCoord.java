@@ -156,7 +156,7 @@ public class NearestRoadCoord {
 
 				if (thisDist < minDist) {
 					minDist = thisDist;
-					Coordinate[] closestPoints = distOp.closestPoints();
+					Coordinate[] closestPoints = distOp.nearestPoints();
 					// Two coordinates returned by closestPoints(), need to find the
 					// one which isn''t the coord parameter
 					debug.append("Closest points (").append(closestPoints.length).append(") are: ").append(

@@ -701,5 +701,9 @@ public class Route implements FixedGeography {
 	public String toString() {
 		return "Route ID=" + this.getGPSID() + " n=" + this.edgeList.size()  + " l=" + getLength() + " \"identifier\" IN " + getRouteSegmentIDsAsString();
 	}
+	
+	public double getAverageEdgeLength() {
+		return this.getLengthInMetres() / this.getRouteAsEdges().size();		
+	}
 
 }

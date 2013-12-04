@@ -17,7 +17,8 @@ import copenhagenabm.orm.HibernateUtil;
  * 
  * @author besn
  *
- * The CalibrationRouteLogger logs routes and route information stemming from every calibration agent. 
+ * The CalibrationRouteLogger logs routes and route information stemming from every 
+ * calibration agent into a table "calibrationroute". 
  *
  */
 public class CalibrationRouteLogger {
@@ -40,6 +41,7 @@ public class CalibrationRouteLogger {
 
 	public void log(ArrayList<CalibrationRoute> calibrationRoutes) {
 		nRoutes = calibrationRoutes.size();
+		System.out.println("(" + ContextManager.getCurrentTick() +") logging " + nRoutes + " routes.");
 		for (CalibrationRoute c : calibrationRoutes) {
 			CalibrationRouteDBObject cRDBO = new CalibrationRouteDBObject(c);
 			session.save(cRDBO);

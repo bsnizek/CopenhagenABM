@@ -13,7 +13,7 @@ import copenhagenabm.loggers.SuccessLogger;
  * 
  * CalibrationModeData
  * 
- * Stores data during the calibration proces
+ * Stores data during the calibration process.
  * 
  * @author Bernhard Snizek
  * b@snizek.com / +45 23 71 00 46 
@@ -22,12 +22,16 @@ import copenhagenabm.loggers.SuccessLogger;
 public class CalibrationModeData {
 	
 	/**
-	 * The data of a calibration route.
+	 * 
+	 * CalibrationRoute
+	 * 
+	 * Holds the data of a calibration route.
 	 * 
 	 * 
 	 * @author besn
 	 *
 	 */
+
 	public class CalibrationRoute {
 		
 		private LineString route;
@@ -40,7 +44,10 @@ public class CalibrationModeData {
 		private boolean successful;
 		private int nIter;
 		private double overlap;
-
+		private IAgent agent;
+		private double edge_lngth_avg;
+		private double calctime;
+		
 		public CalibrationRoute(IAgent agent, Coordinate origin, Coordinate destination, int GPSRouteID, double route_gps_lngth, int nIter) {
 			
 			this.origin = origin;
@@ -48,8 +55,10 @@ public class CalibrationModeData {
 			this.GPSRouteID = GPSRouteID;
 			this.route_gps_lngth = route_gps_lngth;
 			this.nIter = nIter;
-			this.successful = agent.isSuccessful();
-			this.overlap = agent.getOverlap();
+			this.agent = agent;
+			
+			System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + agent.getID() + ") GPS(" + GPSRouteID +") CalibrationRoute() nIter=" + nIter + ".");
+			
 		}
 
 		public Coordinate getDeath() {
@@ -124,6 +133,31 @@ public class CalibrationModeData {
 		public void setRoute(LineString route) {
 			this.route = route;
 		}
+
+		public void setAgent(IAgent cphAgent) {
+			this.agent = cphAgent;
+			
+		}
+
+		public IAgent getAgent() {
+			return agent;
+		}
+
+		public double getEdge_lngth_avg() {
+			return edge_lngth_avg;
+		}
+
+		public void setEdge_lngth_avg(double edge_lngth_avg) {
+			this.edge_lngth_avg = edge_lngth_avg;
+		}
+
+		public double getCalctime() {
+			return calctime;
+		}
+
+		public void setCalctime(double calctime) {
+			this.calctime = calctime;
+		}
 		
 	}
 	
@@ -137,11 +171,11 @@ public class CalibrationModeData {
 	private long runTime;
 	private ArrayList<CalibrationRoute> calibrationRoutes = new ArrayList<CalibrationRoute>();
 	
-	
 	/**
 	 * The ID of the current iteration : 0 .. n-1
 	 */
 	private int currentNIter;
+//	private int GPSId;
 	
 
 	public boolean isOmitDecisionMatrixMultifields() {
@@ -162,16 +196,15 @@ public class CalibrationModeData {
 	/**
 	 * CalibrationModeData
 	 */
-	public CalibrationModeData() {
-		
-	}
 	
 	public CalibrationModeData(double angleToDestWeight, boolean omitDecisionMatrixMultifields) {
 		this.angleToDestWeight = angleToDestWeight;
 		this.omitDecisionMatrixMultifields = omitDecisionMatrixMultifields;
 	}
-	
-	
+
+	public CalibrationModeData() {
+	}
+
 	/**
 	 * log()
 	 * 
@@ -229,11 +262,11 @@ public class CalibrationModeData {
 		
 	}
 
-	// returns the total number of agents we send off for a calibration run. 
-	public void calculateNumberOfIteration() {
-		this.totalNumberOfIterations = (totalMatchedGPSRoutes-omittedMatchedGPSRoutes) * ContextManager.getNumberOfRepetitions();
-		
-	}
+//	// returns the total number of agents we send off for a calibration run. 
+//	public void calculateNumberOfIteration() {
+//		this.totalNumberOfIterations = (totalMatchedGPSRoutes-omittedMatchedGPSRoutes) * ContextManager.getNumberOfRepetitions();
+//		
+//	}
 
 	public int getTotalNumberOfIterations() {
 		return totalNumberOfIterations;
@@ -299,6 +332,7 @@ public class CalibrationModeData {
 
 	public void addCalibrationRoute(CalibrationRoute calibrationRoute) {
 		this.calibrationRoutes.add(calibrationRoute);
+		System.out.println("(" + ContextManager.getCurrentTick() + ") A(" + calibrationRoute.getAgent().getID() + ") IT(" + calibrationRoute.getnIter() + ") CalibrationRoute added.");
 		
 	}
 
@@ -322,5 +356,14 @@ public class CalibrationModeData {
 	public void setCurrentNIter(int currentNIter) {
 		this.currentNIter = currentNIter;
 	}
+
+	public void incrementCurrentNIter() {
+		currentNIter = currentNIter + 1;
+	}
+	
+	public void zeroCurrentNIter() {
+		currentNIter = 0;
+	}
+	
 	
 }

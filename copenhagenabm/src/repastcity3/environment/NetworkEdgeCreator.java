@@ -18,8 +18,6 @@ along with RepastCity.  If not, see <http://www.gnu.org/licenses/>.
 
 package repastcity3.environment;
 
-import java.util.Arrays;
-
 import repast.simphony.space.graph.EdgeCreator;
 
 public class NetworkEdgeCreator <T> implements EdgeCreator<NetworkEdge<T>, T> {

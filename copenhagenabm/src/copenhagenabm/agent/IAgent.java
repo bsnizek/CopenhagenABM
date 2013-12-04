@@ -85,6 +85,10 @@ public interface IAgent {
 	
 	public Road getCurrentRoad();
 
+	
+	/**
+	 * @return true if the agent is at it's destination
+	 */
 	public boolean isAtDestination();
 	
 //	public boolean isTerminated();
@@ -108,9 +112,10 @@ public interface IAgent {
 	public boolean isCalibrationAgent();
 	
 	public MatchedGPSRoute getMatchedGPSRoute();
-
-	public void finishCalibrationRoute(boolean b);
 	
+	/**
+	 * @return
+	 */
 	public CalibrationRoute getCalibrationRoute();
 
 	public void setSuccessful(boolean b);
@@ -122,9 +127,23 @@ public interface IAgent {
 	public double getOverlap();
 
 	/**
-	 * completes the calibration route data
+	 * Collects the calibration route data and throws it over into the CalibrationRoute object.
 	 */
 	public void finishCalibrationData();
 
 	public void setDeathLocation(Coordinate position);
+
+	/**
+	 * - writes the history of the agent
+	 * - logs to postgres (the dot)
+	 * - sets the successful flag
+	 * - puts the agent into the removal queue 
+	 * 
+	 * @param isSuccessful
+	 */
+	public void prepareForRemoval(boolean isSuccessful);
+
 }
+
+
+

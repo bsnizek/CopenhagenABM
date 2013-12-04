@@ -266,10 +266,8 @@ public class PolyLineMover {
 			ContextManager.moveAgent(agent, fact.createPoint(this.targetJunction.getCoords()));
 
 			if (agent.isAtDestination()) {
-				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
-				this.logToPostgres();
 				
-				ContextManager.removeAgent(agent);
+				agent.prepareForRemoval(true);
 				
 				return null;
 			}
@@ -325,7 +323,7 @@ public class PolyLineMover {
 				nextPosition = 0.0d;
 
 				placeAgentOnRoad(road, nextPosition);
-				logToPostgres();
+				ContextManager.logToPostgres(agent);
 
 //				return new OvershootData(road, targetJunction, nextPosition);
 				
@@ -335,14 +333,16 @@ public class PolyLineMover {
 
 			placeAgentOnRoad(road, nextPosition);
 
-			this.logToPostgres();
+			ContextManager.logToPostgres(agent);
 
 
 			if (agent.isAtDestination()) {
 
 				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
 
-//				ContextManager.removeAgent(agent);
+				agent.setSuccessful(true);
+				
+				// ContextManager.removeAgent(agent);
 
 				return null;
 			}
@@ -544,23 +544,14 @@ public class PolyLineMover {
 		return l;
 	}
 
-	public void terminate(Coordinate destinationCoordinate) {
+	public void terminate(Coordinate destinationCoordinate) {	
 		ContextManager.moveAgent(agent, fact.createPoint(destinationCoordinate));
-		logToPostgres();
+		ContextManager.logToPostgres(agent);
 		this.agent.setToBeKilled(true);
-
 	}
 
 	
-	public void logToPostgres() {
-		if (DEBUG_MODE) {
-			System.out.println(">> logging to postreSQL" + agent.getPosition());
-		} else {
-			if (ContextManager.isPostgreSQLLoggerOn()) {
-				ContextManager.getPostgresLogger().log(ContextManager.getCurrentTick(), agent);
-			}
-		}
-	}
+//	
 
 
 }
