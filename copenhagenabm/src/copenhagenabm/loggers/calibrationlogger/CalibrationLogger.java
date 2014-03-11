@@ -40,18 +40,18 @@ public class CalibrationLogger implements CopenhagenABMLogger{
 			return "pathSize;angle_to_destination;route_ID;number_of_edges\n";
 		}
 
-		public String getTail(Handler h) {
-
-			double sum = 0.0d;
-
-			for (double d : pathSizes) {
-				sum = sum + d;
-			}
-
-			String[] xx = new Double(sum/pathSizes.size()).toString().split("\\.");
-
-			return "AVG:" + xx[0] + "," + xx[1];
-		}
+		//		public String getTail(Handler h) {
+		////
+		////			double sum = 0.0d;
+		////
+		////			for (double d : pathSizes) {
+		////				sum = sum + d;
+		////			}
+		////
+		////			String[] xx = new Double(sum/pathSizes.size()).toString().split("\\.");
+		////
+		////			return "AVG:" + xx[0] + "," + xx[1];
+		//		}
 
 	}
 

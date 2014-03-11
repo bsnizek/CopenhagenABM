@@ -11,7 +11,11 @@ public class AgentFactory {
 
 
 	/*
-	 * createAgent gives birth to an agent
+	 * 
+	 * createAgent 
+	 * 
+	 * gives birth to an agent in the standard simulation mode
+	 * Wants the zone from ID (string) andZone to ID (string)
 	 * 
 	 */
 	public CPHAgent createAgent(String zoneFromID, String zoneToID) {

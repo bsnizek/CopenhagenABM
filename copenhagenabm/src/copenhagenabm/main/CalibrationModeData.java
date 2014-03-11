@@ -166,7 +166,7 @@ public class CalibrationModeData {
 	private int omittedMatchedGPSRoutes = 0;
 	private int totalNumberOfIterations = 0;
 	private int successfullyModeledRoutes = 0;
-	private double angleToDestWeight = 0.0;
+//	private double angleToDestWeight = 0.0;
 	private boolean omitDecisionMatrixMultifields = false;
 	private long runTime;
 	private ArrayList<CalibrationRoute> calibrationRoutes = new ArrayList<CalibrationRoute>();
@@ -200,8 +200,7 @@ public class CalibrationModeData {
 	 * CalibrationModeData
 	 */
 	
-	public CalibrationModeData(double angleToDestWeight, boolean omitDecisionMatrixMultifields) {
-		this.angleToDestWeight = angleToDestWeight;
+	public CalibrationModeData(boolean omitDecisionMatrixMultifields) {
 		this.omitDecisionMatrixMultifields = omitDecisionMatrixMultifields;
 	}
 
@@ -229,12 +228,12 @@ public class CalibrationModeData {
 		return calibrationRouteLogger;
 	}
 
-	public String toString() {
-		return "total routes=" + totalMatchedGPSRoutes + "; omitted routes=" + omittedMatchedGPSRoutes + 
-				"; total number of iterations=" + totalNumberOfIterations + 
-				"; successfully modeled routes=" + successfullyModeledRoutes + 
-				"; angleToDestWeight=" + angleToDestWeight;
-	}
+//	public String toString() {
+//		return "total routes=" + totalMatchedGPSRoutes + "; omitted routes=" + omittedMatchedGPSRoutes + 
+//				"; total number of iterations=" + totalNumberOfIterations + 
+//				"; successfully modeled routes=" + successfullyModeledRoutes + 
+//				"; angleToDestWeight=" + angleToDestWeight;
+//	}
 
 	public long getStartTime() {
 		return startTime;
@@ -263,16 +262,6 @@ public class CalibrationModeData {
 	public void incrementOmittedMatchedRoute() {
 		omittedMatchedGPSRoutes = omittedMatchedGPSRoutes + 1;
 		
-	}
-
-//	// returns the total number of agents we send off for a calibration run. 
-//	public void calculateNumberOfIteration() {
-//		this.totalNumberOfIterations = (totalMatchedGPSRoutes-omittedMatchedGPSRoutes) * ContextManager.getNumberOfRepetitions();
-//		
-//	}
-
-	public int getumberOfRepetitions() {
-		return totalNumberOfIterations;
 	}
 
 	public void setTotalNumberOfIterations(int totalNumberOfIterations) {
@@ -310,14 +299,6 @@ public class CalibrationModeData {
 	public void incrementNumberOfCanceledAgents() {
 		canceledAgents = canceledAgents + 1;
 		
-	}
-
-	public double getAngleToDestWeight() {
-		return angleToDestWeight;
-	}
-
-	public void setAngleToDestWeight(double angleToDestWeight) {
-		this.angleToDestWeight = angleToDestWeight;
 	}
 
 	public double getRunningTime() {

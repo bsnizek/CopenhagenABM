@@ -1,0 +1,1 @@
+pathSize;angle_to_destination;route_ID;number_of_edges

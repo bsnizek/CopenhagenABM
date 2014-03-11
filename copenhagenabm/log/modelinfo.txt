@@ -1,0 +1,6 @@
+modelid;readable_date;number_of_repetitions;OmitDecisionMatrixMultifields;angle_to_dest;total_agents;n_successes
+1394547616183;11-3-14 15:20:16;1;false;20.0;1;1
+modelid;readable_date;number_of_repetitions;OmitDecisionMatrixMultifields;angle_to_dest;total_agents;n_successes
+1394547723003;11-3-14 15:22:03;1;false;20.0;1;0
+modelid;readable_date;number_of_repetitions;OmitDecisionMatrixMultifields;angle_to_dest;total_agents;n_successes
+1394548593855;11-3-14 15:36:33;1;false;20.0;1;1

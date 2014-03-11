@@ -23,7 +23,7 @@ public class EmailTool2 {
 		this.to = to;
 
 		this.from = "bs@metascapes.org";
-		this.password = "Goo2012gle!";
+		this.password = "Goo2014gle!!";
 
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
@@ -61,8 +61,8 @@ public class EmailTool2 {
 			// Send message
 			Transport.send(message);
 			System.out.println("Sent message successfully....");
-		}catch (MessagingException mex) {
-			mex.printStackTrace();
+		} catch (MessagingException mex) {
+			// mex.printStackTrace();
 		}
 	}
 

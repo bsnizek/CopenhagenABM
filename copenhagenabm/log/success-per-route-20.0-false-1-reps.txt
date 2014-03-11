@@ -1,0 +1,6 @@
+modelid;route_id;number_of_repetitions;number_of_successful_routes
+1394547616183;333;1;1
+modelid;route_id;number_of_repetitions;number_of_successful_routes
+1394547723003;333;1;0
+modelid;route_id;number_of_repetitions;number_of_successful_routes
+1394548593855;530;1;1

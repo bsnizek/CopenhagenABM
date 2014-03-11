@@ -21,11 +21,13 @@ package copenhagenabm.agent.decisionmatrix;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
 import copenhagenabm.agent.STOCHASTICTY_TYPES;
+import copenhagenabm.environment.Road;
 import copenhagenabm.loggers.DecisionTextLogger;
 import copenhagenabm.loggers.decisionmatrixlogger.DecisionMatrixLogger;
 import copenhagenabm.main.ContextManager;
@@ -157,6 +159,24 @@ public class DecisionMatrix {
 
 		public void setFinalP(double d) {
 			this.finalP = d;
+		}
+
+		/**
+		 * 
+		 * backengineering the road ID
+		 * 
+		 * @return
+		 */
+		public String getName() {
+			
+			try {
+			
+				Road r = (Road) getId();
+				return r.getIdentifier();
+			} catch (Exception e) {
+				return (String) getId();
+			}
+			
 		}
 
 	}
@@ -340,7 +360,7 @@ public class DecisionMatrix {
 
 				Option o = options_iterator.next();
 
-				String paddedOID = "***" ;// TODO String.format("%-12s", o.getName());
+				String paddedOID = String.format("%-12s", o.getName());
 
 				line =line + paddedOID + TAB;
 				characteristics_iterator = this.characteristics.values().iterator();

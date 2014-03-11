@@ -59,9 +59,18 @@ public class CopenhagenABMLogging {
 		}
 
 		createCalibrationLogger(calibrationFolderName + File.separatorChar + "calibrationlog-" + 
-				ContextManager.getCalibrationModeData().getAngleToDestWeight() + "-"  + 
-				ContextManager.getOmitDecisionMatrixMultifields() + "-" + ContextManager.getCalibrationModeData().getNumberOfRepetitions() + "-reps.txt");
+				getAngleToDestWeight() + "-"  + 
+				ContextManager.getOmitDecisionMatrixMultifields() + "-" + getNumberOfRepetitions() + "-reps.txt");
 	}
+	
+	public double getAngleToDestWeight() {
+		return ContextManager.getAngleToDestination();
+	}
+	
+	public int getNumberOfRepetitions() {
+		return ContextManager.getNumberOfRepetitions();
+	}
+	
 
 	private void createLoggingSettings() {
 		// TODO

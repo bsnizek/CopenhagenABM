@@ -46,7 +46,10 @@ public class SuccessLogger {
 	}
 
 	public void log(CalibrationModeData calibrationModeData) {
-		LOGGER.info(calibrationModeData.getAngleToDestWeight() + ";" + 
+		
+		double angleToDestWeight = ContextManager.getCopenhagenABMLogging().getAngleToDestWeight();
+		
+		LOGGER.info(angleToDestWeight + ";" + 
 				calibrationModeData.isOmitDecisionMatrixMultifields() + ";" +
 				calibrationModeData.getNumberOfRepetitions() + ";" + 
 				calibrationModeData.getSuccessfullyModeledRoutes() + ";" + 

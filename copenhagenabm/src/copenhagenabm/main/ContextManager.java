@@ -641,9 +641,6 @@ public class ContextManager implements ContextBuilder<Object> {
 		// 3. Load the Tools
 		loadTools();
 
-		// 4. Setup loggers 
-		this.setupLoggers();
-
 		// let's load the experience rasters
 		if (useExperiences()) {
 
@@ -735,6 +732,9 @@ public class ContextManager implements ContextBuilder<Object> {
 		// let us empty the road logger dir
 
 		// we instantiate a roadLoadLogger with the given 
+		
+		// 4. Setup loggers 
+		this.setupLoggers();
 
 		roadLoadLogger = new RoadLoadLogger(ContextManager.getRoadLoadLoggerFolder());
 
@@ -914,7 +914,6 @@ public class ContextManager implements ContextBuilder<Object> {
 		// build the calibration model data object
 		ContextManager.calibrationModeData = new CalibrationModeData();
 
-		calibrationModeData.setAngleToDestWeight(ContextManager.getAngleToDestination());
 		calibrationModeData.setOmitDecisionMatrixMultifields(ContextManager.getOmitDecisionMatrixMultifields());
 		calibrationModeData.setStartTime(System.currentTimeMillis());
 		setStartTime(System.currentTimeMillis());
@@ -930,6 +929,9 @@ public class ContextManager implements ContextBuilder<Object> {
 		theRoadNetwork = new RoadNetwork();
 
 		int tMR = 0;
+		
+		// 4. Setup loggers 
+		this.setupLoggers();
 
 		// let us populate the matchedGPSRouteStack and the routeStore
 		for (MatchedGPSRoute matchedGPSRoute : ContextManager.getMatchedGPSRoutes()) {
