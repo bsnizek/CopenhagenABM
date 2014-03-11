@@ -53,6 +53,8 @@ public class CalibrationRouteDBObject {
 	private CalibrationRoute calibrationRoute;
 
 	private int agentid;
+	
+	private double od_sinuosity;
 
 
 	/**
@@ -241,6 +243,15 @@ public class CalibrationRouteDBObject {
 
 	public void setModelid(long modelID) {
 		this.modelID = modelID;
+	}
+
+	@Column(name="od_sinuosity")
+	public double getOd_sinuosity() {
+		 return getRoute_sim_lngth() / getOrigo_dest_dist();
+	}
+
+	public void setOd_sinuosity(double od_sinuosity) {
+		this.od_sinuosity = od_sinuosity;
 	}
 
 }

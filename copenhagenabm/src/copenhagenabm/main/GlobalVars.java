@@ -45,7 +45,7 @@ public abstract class GlobalVars {
 		public static final double E_HOJ = -1.2553576d;
 		public static final double E_BUT = -1.021367d;
 
-		public static final double ANGLE_TO_DESTINATION = 100.0d;
+		public static final double ANGLE_TO_DESTINATION = 20.0d;
 		public static final double AVOID_U_TURN = 0.0d;
 		public static final boolean EXCEPT_U_TURN = true;
 		

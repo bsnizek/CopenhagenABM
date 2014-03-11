@@ -1,0 +1,5 @@
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+20.0;true;1;1;2
+angleToDestWeight;OmitDecisionMatrixMultifields;totalIterations;successfulIterations;secondsrun
+20.0;true;1;1;44

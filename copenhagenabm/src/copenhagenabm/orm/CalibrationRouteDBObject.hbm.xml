@@ -38,6 +38,8 @@
 		<property name="agentid" type="integer" />
 		
 		<property name="origo_dest_dist" type="double"/>
+		
+		<property name="od_sinuosity" type="double"/>
 	
 	</class>
 

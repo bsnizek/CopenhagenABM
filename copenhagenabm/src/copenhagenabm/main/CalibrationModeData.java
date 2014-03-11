@@ -172,11 +172,7 @@ public class CalibrationModeData {
 	private ArrayList<CalibrationRoute> calibrationRoutes = new ArrayList<CalibrationRoute>();
 	private int currentNIter;
 	
-	/**
-	 * uniqueModelID, the model run id
-	 * used for the postgis loggers in order to isolate model runs
-	 */
-	private static long uniqueModelID;
+
 	
 	/**
 	 * The ID of the current iteration : 0 .. n-1
@@ -368,16 +364,13 @@ public class CalibrationModeData {
 		return ContextManager.getNumberOfRepetitions();
 	}
 
-	public long getUniqueModelID() {
-		return uniqueModelID;
-	}
-
-	public static void setUniqueModelID(long uniqueModelID) {
-		CalibrationModeData.uniqueModelID = uniqueModelID;
-	}
-
 	public int getTotalNumberOfIterations() {
 		return totalNumberOfIterations;
+	}
+
+	public long getUniqueModelID() {
+		
+		return ContextManager.getUniqueModelID();
 	}
 	
 	

@@ -46,7 +46,10 @@ public class PostgresLogger {
 
 	public void close() {
 		if (ContextManager.isPostgreSQLLoggerOn()) {
-			session.getTransaction().commit();
+
+			if (session.isConnected()) {
+
+				session.getTransaction().commit();}
 		}
 	}
 
@@ -54,7 +57,9 @@ public class PostgresLogger {
 	 * commits, closes the session and opens another one
 	 */
 	public void commit() {
-		session.getTransaction().commit();
+		if (session.isConnected()) {
+			session.getTransaction().commit();
+		}
 
 		session = sf.getCurrentSession();
 		session.beginTransaction();	

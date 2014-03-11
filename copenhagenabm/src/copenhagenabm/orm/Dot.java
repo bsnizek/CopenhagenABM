@@ -13,6 +13,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
 
 import copenhagenabm.agent.IAgent;
+import copenhagenabm.routes.MatchedGPSRoute;
 
 @Entity
 @Table(name="dot")
@@ -28,14 +29,19 @@ public class Dot {
 	
 	// the ID of the route the agent tried to model within the calibration model
 	private int routeid;
-	
 
 
 	public Dot(int tick, IAgent agent, Coordinate coordinate) {
 		this.tick = tick;
 		this.agentID = agent.getID();
 		this.setGeom(fact.createPoint(coordinate));
-		this.routeid = agent.getMatchedGPSRoute().getOBJECTID();
+		MatchedGPSRoute route = agent.getMatchedGPSRoute();
+		if (route == null) {
+			this.routeid = 0;
+		} else {
+			this.routeid = agent.getMatchedGPSRoute().getOBJECTID();
+		}
+		
 		try {
 			this.roadID = agent.getCurrentRoad().getIdentifier();
 		} catch (NoIdentifierException e) {

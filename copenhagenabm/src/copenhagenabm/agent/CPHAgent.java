@@ -491,11 +491,21 @@ public class CPHAgent implements IAgent {
 				}
 
 				newRoad = es.getRoad();
+
 			}
 
 			if (newRoad == null) {
 				if (ContextManager.getDEBUG_MODE()) {
 					System.out.println("new Road = null");
+				}
+				this.prepareForRemoval(true);
+			}
+			
+			if (roadLoadLogger != null) {
+				try {
+					roadLoadLogger.addEntry(newRoad.getIdentifier());
+				} catch (NoIdentifierException e) {
+					e.printStackTrace();
 				}
 			}
 
@@ -552,8 +562,18 @@ public class CPHAgent implements IAgent {
 			}
 
 			if (overshoot != null) {
-				this.plm = new PolyLineMover(this, overshoot.getRoad(),
+				Road nR = overshoot.getRoad();
+				this.plm = new PolyLineMover(this, nR,
 						overshoot.getTargetJunction());
+				
+				if (roadLoadLogger != null) {
+					try {
+						roadLoadLogger.addEntry(nR.getIdentifier());
+					} catch (NoIdentifierException e) {
+						e.printStackTrace();
+					}
+				}
+				
 			}
 
 		}
@@ -588,6 +608,7 @@ public class CPHAgent implements IAgent {
 		}
 
 		if (this.isAtDestination()) {
+//			System.out.println("(" + ContextManager.getCurrentTick() + ") - A(" + this.getID() + ") is prepared for removal CPHA(#591)");
 			this.prepareForRemoval(true);
 		}
 
@@ -634,12 +655,13 @@ public class CPHAgent implements IAgent {
 				String newPathSizeString = xx[0] + "," + xx[1];
 
 				// log into the calibration logger
-				ContextManager.getCalibrationLogger().logLine(
+				ContextManager.getCopenhagenABMLogging().getCalibrationLogger().logLine(
 						newPathSizeString + ";"
 								+ ContextManager.getAngleToDestination() + ";"
 								+ this.matchedGPSRoute.getOBJECTID() + ";"
 								+ this.matchedGPSRoute.getNumberOfEdges());
-				ContextManager.getCalibrationLogger().pathSizes.add(this
+
+				ContextManager.getCopenhagenABMLogging().getCalibrationLogger().pathSizes.add(this
 						.getOverlap());
 
 			}
@@ -953,7 +975,7 @@ public class CPHAgent implements IAgent {
 
 	}
 
-	
+
 	/* (non-Javadoc)
 	 * @see copenhagenabm.agent.IAgent#finishCalibrationData()
 	 * 
@@ -969,8 +991,8 @@ public class CPHAgent implements IAgent {
 
 		this.calibrationRoute.setAgent(this);
 
-		ContextManager.getCalibrationModeData().addCalibrationRoute(
-				this.getCalibrationRoute());
+		//		ContextManager.getCalibrationModeData().addCalibrationRoute(
+		//				this.getCalibrationRoute());
 
 		this.calibrationRoute.setEdge_lngth_avg(this.getRoute().getAverageEdgeLength());
 
@@ -979,7 +1001,7 @@ public class CPHAgent implements IAgent {
 		this.calibrationRoute.setOverlap(getOverlap());
 
 		this.calibrationRoute.setSuccessful(this.isSuccessful());
-		
+
 		ContextManager.getCalibrationModeData().addCalibrationRoute(this.calibrationRoute);
 
 	}
@@ -996,7 +1018,9 @@ public class CPHAgent implements IAgent {
 	@Override
 	public void setSuccessful(boolean b) {
 		this.isSuccessful = b;
-		this.getCalibrationRoute().setSuccessful(b);
+		if (ContextManager.inCalibrationMode()) {
+			this.getCalibrationRoute().setSuccessful(b);
+		}
 
 	}
 
@@ -1114,9 +1138,13 @@ public class CPHAgent implements IAgent {
 
 	public void prepareForRemoval(boolean isSuccessful) {
 
-		if (isSuccessful) {
-			ContextManager.getCalibrationModeData().incrementSuccessfullyModeledRoutes();
-			System.out.println("(" + ContextManager.getCurrentTick() + ") " +  "A(" + getID() + ") at destination.");
+		if (ContextManager.inCalibrationMode()) {
+
+			if (isSuccessful) {
+				ContextManager.getCalibrationModeData().incrementSuccessfullyModeledRoutes();
+				System.out.println("(" + ContextManager.getCurrentTick() + ") " +  "A(" + getID() + ") at destination.");
+			}
+
 		}
 
 		this.writeHistory(ContextManager.getModelRunID());

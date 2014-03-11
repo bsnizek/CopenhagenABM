@@ -115,10 +115,10 @@ public class PolyLineMover {
 				d = dd;
 				currentLineSegmentID = i;
 			}
-			
+
 			i++;
 		}
-		
+
 		// now add each segment until we reach the current segment. 
 		for (int j=0; j<currentLineSegmentID;j++) {
 			if (DEBUG_MODE) {
@@ -127,14 +127,14 @@ public class PolyLineMover {
 				cp = cp + getOrthodromicLineLength(polylineParts.get(j));
 			}
 		}
-		
 
-//		// lets take the last one off again
-//		if (DEBUG_MODE) {
-//			cp = cp - polylineParts.get(currentLineSegmentID).getLength();
-//		} else {
-//			cp = cp - getOrthodromicLineLength(polylineParts.get(currentLineSegmentID));
-//		}
+
+		//		// lets take the last one off again
+		//		if (DEBUG_MODE) {
+		//			cp = cp - polylineParts.get(currentLineSegmentID).getLength();
+		//		} else {
+		//			cp = cp - getOrthodromicLineLength(polylineParts.get(currentLineSegmentID));
+		//		}
 
 		currentLineSegment = polylineParts.get(currentLineSegmentID);
 
@@ -251,24 +251,35 @@ public class PolyLineMover {
 			EdgeSelector es = new EdgeSelector(roads, road, this.getAgent());
 			Road newRoad = es.getRoad();
 
-			// let us add the new road to 
+			if (newRoad!=null) {
 
-			Route theRoute = this.agent.getRoute();
+				// let us add the new road to 
 
-			if (theRoute != null) {
+				Route theRoute = this.agent.getRoute();
 
-				theRoute.addEdgeGeometry(newRoad, newRoad.getGeometry());
+				if (theRoute != null) {
 
+					theRoute.addEdgeGeometry(newRoad, newRoad.getGeometry());
+
+				} 
+
+			} else {
+				this.agent.prepareForRemoval(false);
+				return null;
 			}
+
 
 			// place the agent at the end  of the road
 
 			ContextManager.moveAgent(agent, fact.createPoint(this.targetJunction.getCoords()));
 
 			if (agent.isAtDestination()) {
-				
-				agent.prepareForRemoval(true);
-				
+				//				
+				//				System.out.println("(" + ContextManager.getCurrentTick() + ") - A(" + agent.getID() + ") is prepared for removal PLM(#270)");
+				//				agent.prepareForRemoval(true);
+
+				// we do nothing - let's see what happens
+
 				return null;
 			}
 
@@ -325,8 +336,8 @@ public class PolyLineMover {
 				placeAgentOnRoad(road, nextPosition);
 				ContextManager.logToPostgres(agent);
 
-//				return new OvershootData(road, targetJunction, nextPosition);
-				
+				//				return new OvershootData(road, targetJunction, nextPosition);
+
 				return null;
 
 			} 
@@ -341,7 +352,7 @@ public class PolyLineMover {
 				ContextManager.moveAgent(agent, fact.createPoint(agent.getDestinationCoordinate()));
 
 				agent.setSuccessful(true);
-				
+
 				// ContextManager.removeAgent(agent);
 
 				return null;
@@ -550,8 +561,8 @@ public class PolyLineMover {
 		this.agent.setToBeKilled(true);
 	}
 
-	
-//	
+
+	//	
 
 
 }

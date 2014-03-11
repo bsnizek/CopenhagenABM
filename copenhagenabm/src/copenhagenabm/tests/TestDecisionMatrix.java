@@ -3,7 +3,7 @@ package copenhagenabm.tests;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import copenhagenabm.agent.DecisionMatrix;
+import copenhagenabm.agent.decisionmatrix.DecisionMatrix;
 import copenhagenabm.main.ContextManager;
 
 public class TestDecisionMatrix {
@@ -14,7 +14,7 @@ public class TestDecisionMatrix {
 	public void setup() {
 		
 		int agentID = 0;
-		setDm(new DecisionMatrix(agentID));
+		setDm(new DecisionMatrix(agentID, true));
 	}
 	
 	public void setupCharacteristics() {
@@ -44,7 +44,9 @@ public class TestDecisionMatrix {
 	}
 	
 	public static void main(String[] args) {
+		
 		ContextManager contextManager = new ContextManager();
+		
 		try {
 			contextManager.readProperties();
 		} catch (FileNotFoundException e) {
@@ -53,7 +55,8 @@ public class TestDecisionMatrix {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}	
+		
 		TestDecisionMatrix dm = new TestDecisionMatrix();
 		dm.setup();
 		dm.setupCharacteristics();

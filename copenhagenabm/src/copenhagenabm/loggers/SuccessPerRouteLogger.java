@@ -10,7 +10,6 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import copenhagenabm.agent.IAgent;
-import copenhagenabm.main.CalibrationModeData;
 import copenhagenabm.main.CalibrationModeData.CalibrationRoute;
 import copenhagenabm.main.ContextManager;
 import copenhagenabm.routes.MatchedGPSRoute;
@@ -36,9 +35,9 @@ public class SuccessPerRouteLogger {
 			return buf.toString() + "\n";
 		}
 
-//		public String getTail(Handler h) {
-//			return "SUM:" + this.getTotalNumberOfIterations() + ";" + this.getSuccessfulRoutes();
-//		}
+		//		public String getTail(Handler h) {
+		//			return "SUM:" + this.getTotalNumberOfIterations() + ";" + this.getSuccessfulRoutes();
+		//		}
 
 		public String getHead(Handler h) {
 			return "modelid;route_id;number_of_repetitions;number_of_successful_routes\n";
@@ -72,25 +71,28 @@ public class SuccessPerRouteLogger {
 			CalibrationRoute cR = agent.getCalibrationRoute();
 			int GPSRouteID = cR.getGPSRouteID();
 
-			if (GPSRouteIDs.containsKey(GPSRouteID)) {
+					if (agent.isSuccessful()) {
 
-				GPSRouteIDs.put(GPSRouteID, GPSRouteIDs.get(GPSRouteID) +1 );
+						if (GPSRouteIDs.containsKey(GPSRouteID)) {
 
-			} else {
-				GPSRouteIDs.put(GPSRouteID, 1);
-			}
+							GPSRouteIDs.put(GPSRouteID, GPSRouteIDs.get(GPSRouteID) +1 );
+
+						} else {
+							GPSRouteIDs.put(GPSRouteID, 1);
+						}
+					}
 		}
 
 		Iterable<MatchedGPSRoute> mGPSR = ContextManager.getMatchedGPSRoutes();
 
 		for (MatchedGPSRoute r : mGPSR) {
-			
-			long modelID = ContextManager.getCalibrationModeData().getUniqueModelID();
-			
+
+			long modelID = ContextManager.getUniqueModelID();
+
 			int objID = r.getOBJECTID();
-			
+
 			Integer xx = GPSRouteIDs.get(objID);
-			
+
 			if (xx==null) 
 				LOGGER.info(modelID + ";" + objID + ";" + ContextManager.getNumberOfRepetitions() + ";" + 0);
 			else 

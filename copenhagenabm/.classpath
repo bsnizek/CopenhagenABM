@@ -23,6 +23,7 @@
 	<classpathentry kind="lib" path="lib/hibernate-spatial-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/hibernate-spatial-postgis-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-nop-1.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/gt2-graph.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
 	<classpathentry kind="con" path="REPAST_SIMPHONY_SUPPORT"/>
